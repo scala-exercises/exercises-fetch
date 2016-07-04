@@ -12,6 +12,8 @@ object FetchLibrary extends exercise.Library {
 
   override def sections = List(
     UsageSection,
-    CachingSection
+    CachingSection,
+    ErrorHandlingSection,
+    SyntaxSection
   )
 }

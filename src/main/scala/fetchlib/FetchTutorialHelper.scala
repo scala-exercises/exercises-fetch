@@ -87,4 +87,13 @@ object FetchTutorialHelper {
 
   val cache = InMemoryCache(UserSource.identity(1) -> User(1, "@dialelo"))
 
+  final case class ForgetfulCache() extends DataSourceCache {
+    override def get[A](k: DataSourceIdentity): Option[A] = None
+    override def update[A](k: DataSourceIdentity, v: A): ForgetfulCache = this
+  }
+
+  import fetch.syntax._
+
+  val fetchError: Fetch[User] = (new Exception("Oh noes")).fetch
+
 }
