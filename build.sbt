@@ -12,6 +12,7 @@ lazy val fetch = (project in file("."))
   ),
   libraryDependencies ++= Seq(
     "com.fortysevendeg" %% "fetch" % "0.3.0-SNAPSHOT",
+    "com.fortysevendeg" %% "fetch-monix" % "0.3.0-SNAPSHOT",
     "com.chuusai" %% "shapeless" % "2.2.5",
     "org.scalatest" %% "scalatest" % "2.2.4",
     "org.scala-exercises" %% "exercise-compiler" % version.value,

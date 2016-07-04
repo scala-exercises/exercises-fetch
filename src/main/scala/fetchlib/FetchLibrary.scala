@@ -14,6 +14,8 @@ object FetchLibrary extends exercise.Library {
     UsageSection,
     CachingSection,
     ErrorHandlingSection,
-    SyntaxSection
+    SyntaxSection,
+    CatsSection,
+    ConcurrencyMonadsSection
   )
 }

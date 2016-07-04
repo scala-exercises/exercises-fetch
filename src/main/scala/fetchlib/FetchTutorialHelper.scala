@@ -96,4 +96,45 @@ object FetchTutorialHelper {
 
   val fetchError: Fetch[User] = (new Exception("Oh noes")).fetch
 
+  import cats.syntax.cartesian._
+
+  val postsByAuthor: Fetch[List[Post]] = for {
+    posts <- List(1, 2).traverse(getPost)
+    authors <- posts.traverse(getAuthor)
+    ordered = (posts zip authors).sortBy({ case (_, author) => author.username }).map(_._1)
+  } yield ordered
+
+  val postTopics: Fetch[Map[PostTopic, Int]] = for {
+    posts <- List(2, 3).traverse(getPost)
+    topics <- posts.traverse(getPostTopic)
+    countByTopic = (posts zip topics).groupBy(_._2).mapValues(_.size)
+  } yield countByTopic
+
+  val homePage = (postsByAuthor |@| postTopics).tupled
+
+  import cats.{Eval, Now, Later, Always}
+  import monix.eval.Task
+
+  import monix.execution.Cancelable
+  import scala.concurrent.duration._
+
+  def queryToTask[A](q: Query[A]): Task[A] = q match {
+    case Sync(e) => evalToTask(e)
+    case Async(action, timeout) => {
+      val task: Task[A] = Task.create((scheduler, callback) => {
+        scheduler.execute(new Runnable {
+          def run() = action(callback.onSuccess, callback.onError)
+        })
+
+        Cancelable.empty
+      })
+
+      timeout match {
+        case finite: FiniteDuration => task.timeout(finite)
+        case _ => task
+      }
+    }
+    case Ap(qf, qx) => Task.zip2(queryToTask(qf), queryToTask(qx)).map({ case (f, x) => f(x) })
+  }
+
 }
