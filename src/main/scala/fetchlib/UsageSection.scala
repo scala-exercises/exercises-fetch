@@ -355,13 +355,13 @@ object UsageSection extends FlatSpec with Matchers with Section {
    * override def fetchOne(id: Post): Query[Option[PostTopic]] = {
    * Query.sync({
    * val topic = if (id.id % 2 == 0) "monad" else "applicative"
-   * latency(Option(topic), s"One Post Topic $id")
+   * Option(topic)
    * })
    * }
    * override def fetchMany(ids: NonEmptyList[Post]): Query[Map[Post, PostTopic]] = {
    * Query.sync({
    * val result = ids.unwrap.map(id => (id, if (id.id % 2 == 0) "monad" else "applicative")).toMap
-   * latency(result, s"Many Post Topics $ids")
+   * result
    * })
    * }
    * }

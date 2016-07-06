@@ -76,8 +76,8 @@ object ConcurrencyMonadsSection extends FlatSpec with Matchers with Section {
     }
 
     val result = Await.result(op, 5 seconds)
-
-    result should be
+ 
+    result should be(res0)
   }
 
   /**

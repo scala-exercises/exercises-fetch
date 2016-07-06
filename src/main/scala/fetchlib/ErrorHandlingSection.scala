@@ -46,7 +46,7 @@ object ErrorHandlingSection extends FlatSpec with Matchers with Section {
    * Now we can convert `Eval[User]` into `Eval[Throwable Xor User]` and capture exceptions as values
    * in the left of the disjunction.
    */
-  def attemptFailedFetch(res0: Exception Xor User) = {
+  def attemptFailedFetch(res0: Boolean) = {
     import fetch.unsafe.implicits._
     import cats.Eval
     import cats.data.Xor
@@ -54,16 +54,16 @@ object ErrorHandlingSection extends FlatSpec with Matchers with Section {
     val safeResult: Eval[Throwable Xor User] =
       FetchMonadError[Eval].attempt(fetchError.runA[Eval])
 
-    safeResult.value should be(res0)
+    safeResult.value.isLeft should be(res0)
   }
 
   /**
    * And more succintly with Cats' applicative error syntax.
    */
-  def attemptFailedFetchSyntax(res0: Exception Xor User) = {
+  def attemptFailedFetchSyntax(res0: Boolean) = {
     import cats.syntax.applicativeError._
 
-    fetchError.runA[Eval].attempt.value should be(res0)
+    fetchError.runA[Eval].attempt.value.isLeft should be(res0)
   }
 
 }

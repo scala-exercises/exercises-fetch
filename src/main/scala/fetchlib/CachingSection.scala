@@ -51,7 +51,7 @@ object CachingSection extends FlatSpec with Matchers with Section {
    */
   def cachePartialHits(res0: Int) = {
     val env = List(1, 2, 3).traverse(getUser).runE[Id](cache)
-    env.rounds.size should be(res0)
+    env.rounds.count(_.cached) should be(res0)
   }
 
   /**
@@ -70,11 +70,11 @@ object CachingSection extends FlatSpec with Matchers with Section {
     def fetchUsers = List(1, 2, 3).traverse(getUser)
     val firstEnv = fetchUsers.runE[Id]
 
-    firstEnv.rounds.size should be(res0)
+    firstEnv.rounds.count(_.cached) should be(res0)
 
     val secondEnv = fetchUsers.runA[Id](firstEnv.cache)
 
-    firstEnv.rounds.size should be(res1)
+    firstEnv.rounds.count(_.cached) should be(res1)
   }
 
   /**
@@ -118,7 +118,7 @@ object CachingSection extends FlatSpec with Matchers with Section {
 
     val env = fetchSameTwice.runE[Id](ForgetfulCache())
 
-    env.rounds.size should be(res0)
+    env.rounds.count(_.cached) should be(res0)
   }
 
 }

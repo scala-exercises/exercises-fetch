@@ -8,7 +8,7 @@ import org.scalatest.prop.Checkers
 
 import org.scalacheck.Shapeless._
 
-class QuickStartSpec extends Spec with Checkers {
+class UsageSpec extends Spec with Checkers {
 
   import FetchTutorialHelper._
   import UsageSection._
@@ -29,5 +29,22 @@ class QuickStartSpec extends Spec with Checkers {
   def `Caching Strategy` = 
     check(testSuccess(caching _, (userDatabase(1), userDatabase(1)) :: 1 :: HNil))
 
+  def `Sync Queries` = 
+    check(testSuccess(synchronous _, true :: HNil))
+
+  def `Async Queries` = 
+    check(testSuccess(asynchronous _, false :: HNil))
+
+  def `Combining Data` =
+    check(testSuccess(combiningData _, (postDatabase(1), "applicative") :: HNil))
+
+  def `Combining Concurrency` =
+    check(testSuccess(concurrency _, (postDatabase(1), userDatabase(2)) :: 1 :: HNil))
+
+  def `Combinators sequence` =
+    check(testSuccess(sequence _, List(userDatabase(1), userDatabase(2), userDatabase(3)) :: HNil))
+
+  def `Combinators traverse` =
+    check(testSuccess(traverse _, List(userDatabase(1), userDatabase(2), userDatabase(3)) :: HNil))
 
 }
