@@ -9,6 +9,8 @@ import fetch.unsafe.implicits._
 import fetch.syntax._
 import scala.util.Try
 
+import org.scalaexercises.definitions._
+
 /**
  *
  * = Error handling =
@@ -18,7 +20,7 @@ import scala.util.Try
  *
  * @param name error_handling
  */
-object ErrorHandlingSection extends FlatSpec with Matchers with exercise.Section {
+object ErrorHandlingSection extends FlatSpec with Matchers with Section {
 
   import FetchTutorialHelper._
 

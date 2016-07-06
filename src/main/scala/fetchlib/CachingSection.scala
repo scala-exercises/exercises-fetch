@@ -11,6 +11,8 @@ import cats.std.list._
 import cats.syntax.cartesian._
 import cats.syntax.traverse._
 
+import org.scalaexercises.definitions._
+
 /**
  * = Caching =
  *
@@ -20,7 +22,7 @@ import cats.syntax.traverse._
  *
  * @param name caching
  */
-object CachingSection extends FlatSpec with Matchers with exercise.Section {
+object CachingSection extends FlatSpec with Matchers with Section {
 
   import FetchTutorialHelper._
 

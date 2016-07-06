@@ -8,14 +8,6 @@ object FetchTutorialHelper {
   type UserId = Int
   case class User(id: UserId, username: String)
 
-  def latency[A](result: A, msg: String) = {
-    val id = Thread.currentThread.getId
-    println(s"~~> [$id] $msg")
-    Thread.sleep(100)
-    println(s"<~~ [$id] $msg")
-    result
-  }
-
   import cats.data.NonEmptyList
 
   val userDatabase: Map[UserId, User] = Map(
@@ -28,12 +20,12 @@ object FetchTutorialHelper {
   implicit object UserSource extends DataSource[UserId, User] {
     override def fetchOne(id: UserId): Query[Option[User]] = {
       Query.sync({
-        latency(userDatabase.get(id), s"One User $id")
+        userDatabase.get(id)
       })
     }
     override def fetchMany(ids: NonEmptyList[UserId]): Query[Map[UserId, User]] = {
       Query.sync({
-        latency(userDatabase.filterKeys(ids.unwrap.contains), s"Many Users $ids")
+        userDatabase.filterKeys(ids.unwrap.contains)
       })
     }
   }
@@ -52,12 +44,12 @@ object FetchTutorialHelper {
   implicit object PostSource extends DataSource[PostId, Post] {
     override def fetchOne(id: PostId): Query[Option[Post]] = {
       Query.sync({
-        latency(postDatabase.get(id), s"One Post $id")
+        postDatabase.get(id)
       })
     }
     override def fetchMany(ids: NonEmptyList[PostId]): Query[Map[PostId, Post]] = {
       Query.sync({
-        latency(postDatabase.filterKeys(ids.unwrap.contains), s"Many Posts $ids")
+        postDatabase.filterKeys(ids.unwrap.contains)
       })
     }
   }
@@ -72,13 +64,13 @@ object FetchTutorialHelper {
     override def fetchOne(id: Post): Query[Option[PostTopic]] = {
       Query.sync({
         val topic = if (id.id % 2 == 0) "monad" else "applicative"
-        latency(Option(topic), s"One Post Topic $id")
+        Option(topic)
       })
     }
     override def fetchMany(ids: NonEmptyList[Post]): Query[Map[Post, PostTopic]] = {
       Query.sync({
         val result = ids.unwrap.map(id => (id, if (id.id % 2 == 0) "monad" else "applicative")).toMap
-        latency(result, s"Many Post Topics $ids")
+        result
       })
     }
   }
@@ -97,6 +89,7 @@ object FetchTutorialHelper {
   val fetchError: Fetch[User] = (new Exception("Oh noes")).fetch
 
   import cats.syntax.cartesian._
+  import cats.syntax.traverse._
 
   val postsByAuthor: Fetch[List[Post]] = for {
     posts <- List(1, 2).traverse(getPost)
@@ -112,11 +105,11 @@ object FetchTutorialHelper {
 
   val homePage = (postsByAuthor |@| postTopics).tupled
 
-  import cats.{Eval, Now, Later, Always}
   import monix.eval.Task
 
   import monix.execution.Cancelable
   import scala.concurrent.duration._
+  import fetch.monixTask.implicits._
 
   def queryToTask[A](q: Query[A]): Task[A] = q match {
     case Sync(e) => evalToTask(e)

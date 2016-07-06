@@ -8,6 +8,8 @@ import cats._
 import fetch.syntax._
 import scala.util.Try
 
+import org.scalaexercises.definitions._
+
 /**
  * = Concurrency monads =
  *
@@ -39,7 +41,7 @@ import scala.util.Try
  *
  * @param name concurrency_monads
  */
-object ConcurrencyMonadsSection extends FlatSpec with Matchers with exercise.Section {
+object ConcurrencyMonadsSection extends FlatSpec with Matchers with Section {
 
   import FetchTutorialHelper._
 

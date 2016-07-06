@@ -5,7 +5,7 @@ lazy val fetch = (project in file("."))
   organization := "org.scala-exercises",
   name         := "exercises-fetch",
   scalaVersion := "2.11.7",
-  version := "0.1.1",
+  version := "0.2.1-SNAPSHOT",
   resolvers ++= Seq(
     Resolver.sonatypeRepo("snapshots"),
     Resolver.sonatypeRepo("releases")

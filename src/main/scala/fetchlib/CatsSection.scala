@@ -9,6 +9,9 @@ import fetch.unsafe.implicits._
 import fetch.syntax._
 import scala.util.Try
 
+
+import org.scalaexercises.definitions._
+
 /**
  * = cats =
  *
@@ -25,7 +28,7 @@ import scala.util.Try
  *
  * @param name cats
  */
-object CatsSection extends FlatSpec with Matchers with exercise.Section {
+object CatsSection extends FlatSpec with Matchers with Section {
 
   /**
    * = Applicative =

@@ -10,6 +10,9 @@ import fetch.syntax._
 import cats.std.list._
 import cats.syntax.cartesian._
 import cats.syntax.traverse._
+
+import org.scalaexercises.definitions._
+
 /**
  * = Introduction =
  *
@@ -72,17 +75,6 @@ import cats.syntax.traverse._
  * case class User(id: UserId, username: String)
  * }}}
  *
- * We'll simulate unpredictable latency with this function.
- *
- * {{{
- * def latency[A](result: A, msg: String) = {
- * val id = Thread.currentThread.getId
- * println(s"~~> [$id] $msg")
- * Thread.sleep(100)
- * println(s"<~~ [$id] $msg")
- * result
- * }
- * }}}
  *
  * And now we're ready to write our user data source; we'll emulate a database with an in-memory map.
  *
@@ -102,12 +94,12 @@ import cats.syntax.traverse._
  * implicit object UserSource extends DataSource[UserId, User]{
  * override def fetchOne(id: UserId): Query[Option[User]] = {
  * Query.sync({
- * latency(userDatabase.get(id), s"One User $id")
+ * userDatabase.get(id)
  * })
  * }
  * override def fetchMany(ids: NonEmptyList[UserId]): Query[Map[UserId, User]] = {
  * Query.sync({
- * latency(userDatabase.filterKeys(ids.unwrap.contains), s"Many Users $ids")
+ * userDatabase.filterKeys(ids.unwrap.contains)
  * })
  * }
  * }
@@ -122,7 +114,7 @@ import cats.syntax.traverse._
  *
  * @param name usage
  */
-object UsageSection extends FlatSpec with Matchers with exercise.Section {
+object UsageSection extends FlatSpec with Matchers with Section {
 
   import FetchTutorialHelper._
 
@@ -164,7 +156,6 @@ object UsageSection extends FlatSpec with Matchers with exercise.Section {
    */
   def creatingAndRunning(res0: User) = {
     val fetchUser: Fetch[User] = getUser(1)
-
     fetchUser.runA[Id] should be(res0)
   }
 

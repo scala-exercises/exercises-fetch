@@ -9,12 +9,14 @@ import fetch.unsafe.implicits._
 import fetch.syntax._
 import scala.util.Try
 
+import org.scalaexercises.definitions._
+
 /**
  * = Syntax =
  *
  * @param name syntax
  */
-object SyntaxSection extends FlatSpec with Matchers with exercise.Section {
+object SyntaxSection extends FlatSpec with Matchers with Section {
 
   import FetchTutorialHelper._
 
