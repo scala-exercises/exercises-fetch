@@ -1,6 +1,6 @@
 package fetchlib
 
-import cats.data.{NonEmptyList, Xor}
+import cats.data.NonEmptyList
 import org.scalatest._
 import fetch._
 
@@ -43,15 +43,14 @@ object ErrorHandlingSection extends FlatSpec with Matchers with Section {
    * throwing exceptions. Fetch provides an implicit instance of `FetchMonadError[Eval]` that we can import
    * from `fetch.unsafe.implicits._` to have it available.
    *
-   * Now we can convert `Eval[User]` into `Eval[Throwable Xor User]` and capture exceptions as values
+   * Now we can convert `Eval[User]` into `Eval[Either[Throwable, User]]` and capture exceptions as values
    * in the left of the disjunction.
    */
   def attemptFailedFetch(res0: Boolean) = {
     import fetch.unsafe.implicits._
     import cats.Eval
-    import cats.data.Xor
 
-    val safeResult: Eval[Throwable Xor User] =
+    val safeResult: Eval[Either[Throwable, User]] =
       FetchMonadError[Eval].attempt(fetchError.runA[Eval])
 
     safeResult.value.isLeft should be(res0)

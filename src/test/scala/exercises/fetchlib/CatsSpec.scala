@@ -3,6 +3,7 @@ package exercises
 import fetchlib._
 import shapeless.HNil
 
+import org.scalaexercises.Test
 import org.scalatest.Spec
 import org.scalatest.prop.Checkers
 

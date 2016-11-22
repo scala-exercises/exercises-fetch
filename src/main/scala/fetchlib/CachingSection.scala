@@ -7,7 +7,7 @@ import fetch._
 import cats._
 import fetch.unsafe.implicits._
 import fetch.syntax._
-import cats.std.list._
+import cats.instances.list._
 import cats.syntax.cartesian._
 import cats.syntax.traverse._
 
@@ -37,21 +37,33 @@ object CachingSection extends FlatSpec with Matchers with Section {
    * We can pass a cache as argument when running a fetch
    */
   def prepopulating(res0: Int) = {
-
     val env = getUser(1).runE[Id](cache)
     env.rounds.size should be(res0)
-
   }
 
   /**
    * As you can see, when all the data is cached, no query to the data sources is executed since the results are available
-   * in the cache.
+   * in the cache. We'll write a `totalFetched` function for computing the number of identities that were requested during
+   * a series of rounds:
+   *
+   * {{{
+   * def totalFetched(rounds: Seq[Round]): Int =
+   *   rounds.map((round: Round) => requestFetches(round.request)).toList.sum
+   *
+   * def requestFetches(r: FetchRequest): Int =
+   *   r match {
+   *     case FetchOne(_, _)       => 1
+   *     case FetchMany(ids, _)    => ids.toList.size
+   *     case Concurrent(requests) => requests.toList.map(requestFetches).sum
+   * }
+   * }}}
+   *
    * If only part of the data is cached, the cached data won't be asked for:
    *
    */
   def cachePartialHits(res0: Int) = {
     val env = List(1, 2, 3).traverse(getUser).runE[Id](cache)
-    env.rounds.count(_.cached) should be(res0)
+    totalFetched(env.rounds) should be(res0)
   }
 
   /**
@@ -60,7 +72,7 @@ object CachingSection extends FlatSpec with Matchers with Section {
    * When running a fetch, we are generally interested in its final result. However, we also have access to the cache
    * and information about the executed rounds once we run a fetch. Fetch's interpreter keeps its state in an environment
    * (implementing the `Env` trait), and we can get both the environment and result after running a fetch using `Fetch.runFetch`
-   * instead of `Fetch.run` or `value.runF` via it's implicit syntax.
+   * instead of `Fetch.run` or `value.runF` via it's implicit syntax `value.runE`.
    *
    * Knowing this, we can replay a fetch reusing the cache of a previous one. The replayed fetch won't have to call any of the
    * data sources.
@@ -70,11 +82,11 @@ object CachingSection extends FlatSpec with Matchers with Section {
     def fetchUsers = List(1, 2, 3).traverse(getUser)
     val firstEnv = fetchUsers.runE[Id]
 
-    firstEnv.rounds.count(_.cached) should be(res0)
+    firstEnv.rounds.size should be(res0)
 
-    val secondEnv = fetchUsers.runA[Id](firstEnv.cache)
+    val secondEnv = fetchUsers.runE[Id](firstEnv.cache)
 
-    firstEnv.rounds.count(_.cached) should be(res1)
+    secondEnv.rounds.size should be(res1)
   }
 
   /**
@@ -118,7 +130,7 @@ object CachingSection extends FlatSpec with Matchers with Section {
 
     val env = fetchSameTwice.runE[Id](ForgetfulCache())
 
-    env.rounds.count(_.cached) should be(res0)
+    env.rounds.size should be(res0)
   }
 
 }

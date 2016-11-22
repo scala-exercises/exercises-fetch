@@ -1,6 +1,6 @@
 package fetchlib
 
-import cats.data.{NonEmptyList, Xor}
+import cats.data.NonEmptyList
 import org.scalatest._
 import fetch._
 

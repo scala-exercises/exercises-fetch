@@ -7,7 +7,7 @@ import fetch._
 import cats._
 import fetch.unsafe.implicits._
 import fetch.syntax._
-import cats.std.list._
+import cats.instances.list._
 import cats.syntax.cartesian._
 import cats.syntax.traverse._
 
@@ -80,7 +80,7 @@ import org.scalaexercises.definitions._
  *
  * {{{
  * import cats.data.NonEmptyList
- * import cats.std.list._
+ * import cats.instances.list._
  *
  * import fetch._
  *
@@ -99,7 +99,7 @@ import org.scalaexercises.definitions._
  * }
  * override def fetchMany(ids: NonEmptyList[UserId]): Query[Map[UserId, User]] = {
  * Query.sync({
- * userDatabase.filterKeys(ids.unwrap.contains)
+ * userDatabase.filterKeys(ids.toList.contains)
  * })
  * }
  * }
@@ -328,7 +328,7 @@ object UsageSection extends FlatSpec with Matchers with Section {
    * }
    * override def fetchMany(ids: NonEmptyList[PostId]): Query[Map[PostId, Post]] = {
    * Query.sync({
-   * latency(postDatabase.filterKeys(ids.unwrap.contains), s"Many Posts $ids")
+   * latency(postDatabase.filterKeys(ids.toList.contains), s"Many Posts $ids")
    * })
    * }
    * }
@@ -360,7 +360,7 @@ object UsageSection extends FlatSpec with Matchers with Section {
    * }
    * override def fetchMany(ids: NonEmptyList[Post]): Query[Map[Post, PostTopic]] = {
    * Query.sync({
-   * val result = ids.unwrap.map(id => (id, if (id.id % 2 == 0) "monad" else "applicative")).toMap
+   * val result = ids.toList.map(id => (id, if (id.id % 2 == 0) "monad" else "applicative")).toMap
    * result
    * })
    * }
@@ -428,7 +428,7 @@ object UsageSection extends FlatSpec with Matchers with Section {
    * Since `sequence` uses applicative operations internally, the library is able to perform optimizations
    * across all the sequenced fetches.
    * {{{
-   * import cats.std.list._
+   * import cats.instances.list._
    * import cats.syntax.traverse._
    * }}}
    */

@@ -3,7 +3,7 @@ package fetchlib
 object FetchTutorialHelper {
 
   import fetch._
-  import cats.std.list._
+  import cats.instances.list._
 
   type UserId = Int
   case class User(id: UserId, username: String)
@@ -25,7 +25,7 @@ object FetchTutorialHelper {
     }
     override def fetchMany(ids: NonEmptyList[UserId]): Query[Map[UserId, User]] = {
       Query.sync({
-        userDatabase.filterKeys(ids.unwrap.contains)
+        userDatabase.filterKeys(ids.toList.contains)
       })
     }
   }
@@ -49,7 +49,7 @@ object FetchTutorialHelper {
     }
     override def fetchMany(ids: NonEmptyList[PostId]): Query[Map[PostId, Post]] = {
       Query.sync({
-        postDatabase.filterKeys(ids.unwrap.contains)
+        postDatabase.filterKeys(ids.toList.contains)
       })
     }
   }
@@ -69,7 +69,7 @@ object FetchTutorialHelper {
     }
     override def fetchMany(ids: NonEmptyList[Post]): Query[Map[Post, PostTopic]] = {
       Query.sync({
-        val result = ids.unwrap.map(id => (id, if (id.id % 2 == 0) "monad" else "applicative")).toMap
+        val result = ids.toList.map(id => (id, if (id.id % 2 == 0) "monad" else "applicative")).toMap
         result
       })
     }
@@ -130,4 +130,13 @@ object FetchTutorialHelper {
     case Ap(qf, qx) => Task.zip2(queryToTask(qf), queryToTask(qx)).map({ case (f, x) => f(x) })
   }
 
+  def totalFetched(rounds: Seq[Round]): Int =
+    rounds.map((round: Round) => requestFetches(round.request)).toList.sum
+
+  def requestFetches(r: FetchRequest): Int =
+    r match {
+      case FetchOne(_, _)       => 1
+      case FetchMany(ids, _)    => ids.toList.size
+      case Concurrent(requests) => requests.toList.map(requestFetches).sum
+    }
 }
