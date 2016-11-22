@@ -4,7 +4,7 @@ lazy val fetch = (project in file("."))
 .settings(
   organization := "org.scala-exercises",
   name         := "exercises-fetch",
-  scalaVersion := "2.11.7",
+  scalaVersion := "2.11.8",
   version := "0.3.0-SNAPSHOT",
   resolvers ++= Seq(
     Resolver.sonatypeRepo("snapshots"),
@@ -19,13 +19,13 @@ lazy val fetch = (project in file("."))
     "org.scala-exercises" %% "definitions" % version.value,
     "org.scalacheck" %% "scalacheck" % "1.12.5",
     "com.github.alexarchambault" %% "scalacheck-shapeless_1.12" % "0.3.1",
-    compilerPlugin("org.spire-math" %% "kind-projector" % "0.7.1")
+    compilerPlugin("org.spire-math" %% "kind-projector" % "0.9.3")
   )
 )
 
 // Distribution
 
-lazy val gpgFolder = sys.env.getOrElse("SE_GPG_FOLDER", ".")
+lazy val gpgFolder = sys.env.getOrElse("PGP_FOLDER", ".")
 
 lazy val publishSettings = Seq(
   organizationName := "Scala Exercises",
@@ -33,7 +33,7 @@ lazy val publishSettings = Seq(
   startYear := Some(2016),
   description := "Scala Exercises: The path to enlightenment",
   homepage := Some(url("http://scala-exercises.org")),
-  pgpPassphrase := Some(sys.env.getOrElse("SE_GPG_PASSPHRASE", "").toCharArray),
+  pgpPassphrase := Some(sys.env.getOrElse("PGP_PASSPHRASE", "").toCharArray),
   pgpPublicRing := file(s"$gpgFolder/pubring.gpg"),
   pgpSecretRing := file(s"$gpgFolder/secring.gpg"),
   credentials += Credentials("Sonatype Nexus Repository Manager",  "oss.sonatype.org",  sys.env.getOrElse("PUBLISH_USERNAME", ""),  sys.env.getOrElse("PUBLISH_PASSWORD", "")),
