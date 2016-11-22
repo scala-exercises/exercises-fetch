@@ -5,14 +5,14 @@ lazy val fetch = (project in file("."))
   organization := "org.scala-exercises",
   name         := "exercises-fetch",
   scalaVersion := "2.11.7",
-  version := "0.2.1-SNAPSHOT",
+  version := "0.3.0-SNAPSHOT",
   resolvers ++= Seq(
     Resolver.sonatypeRepo("snapshots"),
     Resolver.sonatypeRepo("releases")
   ),
   libraryDependencies ++= Seq(
-    "com.fortysevendeg" %% "fetch" % "0.3.0-SNAPSHOT",
-    "com.fortysevendeg" %% "fetch-monix" % "0.3.0-SNAPSHOT",
+    "com.fortysevendeg" %% "fetch" % "0.4.0",
+    "com.fortysevendeg" %% "fetch-monix" % "0.4.0",
     "com.chuusai" %% "shapeless" % "2.2.5",
     "org.scalatest" %% "scalatest" % "2.2.4",
     "org.scala-exercises" %% "exercise-compiler" % version.value,
