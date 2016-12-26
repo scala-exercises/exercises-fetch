@@ -8,12 +8,13 @@ jdk:
 script:
 - sbt compile test
 
+before_install:
+- if [ "$TRAVIS_BRANCH" = "master" -a "$TRAVIS_PULL_REQUEST" = "false" ]; then
+     openssl aes-256-cbc -K $encrypted_ad603750d9a4_key -iv $encrypted_ad603750d9a4_iv -in secring.gpg.enc -out secring.gpg -d;
+  fi
+
 after_success:
 - if [ "$TRAVIS_BRANCH" = "master" -a "$TRAVIS_PULL_REQUEST" = "false" ]; then sbt
   compile publishSigned; fi
 - if [ "$TRAVIS_PULL_REQUEST" = "true" ]; then echo "Not in master branch, skipping
   deploy and release"; fi
-  
-before_install:
-- openssl aes-256-cbc -K $encrypted_ad603750d9a4_key -iv $encrypted_ad603750d9a4_iv
-  -in secring.gpg.enc -out secring.gpg -d
