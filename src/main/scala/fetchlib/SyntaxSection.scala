@@ -1,3 +1,8 @@
+/*
+ * scala-exercises - exercises-fetch
+ * Copyright (C) 2015-2016 47 Degrees, LLC. <http://www.47deg.com>
+ */
+
 package fetchlib
 
 import cats.data.NonEmptyList
@@ -33,9 +38,8 @@ object SyntaxSection extends FlatSpec with Matchers with Section {
    * Executing a pure fetch doesn't query any data source, as expected.
    *
    */
-  def implicitSyntax(res0: Int) = {
+  def implicitSyntax(res0: Int) =
     42.fetch.runA[Id] should be(res0)
-  }
 
   /**
    * = error =
@@ -64,9 +68,8 @@ object SyntaxSection extends FlatSpec with Matchers with Section {
    * Run directly any fetch with `fetch1.runA[M[_]]`.
    *
    */
-  def runA(res0: Int) = {
+  def runA(res0: Int) =
     1.fetch.runA[Id] should be(res0)
-  }
 
   /**
    * = runE =
@@ -74,9 +77,8 @@ object SyntaxSection extends FlatSpec with Matchers with Section {
    * Discard results and get the fetch environment with `fetch1.runE[M[_]]`.
    *
    */
-  def runE(res0: Boolean) = {
+  def runE(res0: Boolean) =
     1.fetch.runE[Id].isInstanceOf[FetchEnv] should be(res0)
-  }
 
   /**
    * = runF =

@@ -1,3 +1,8 @@
+/*
+ * scala-exercises - exercises-fetch
+ * Copyright (C) 2015-2016 47 Degrees, LLC. <http://www.47deg.com>
+ */
+
 package fetchlib
 
 import cats.data.NonEmptyList
@@ -80,7 +85,7 @@ object CachingSection extends FlatSpec with Matchers with Section {
    */
   def replaying(res0: Int, res1: Int) = {
     def fetchUsers = List(1, 2, 3).traverse(getUser)
-    val firstEnv = fetchUsers.runE[Id]
+    val firstEnv   = fetchUsers.runE[Id]
 
     firstEnv.rounds.size should be(res0)
 
@@ -124,7 +129,7 @@ object CachingSection extends FlatSpec with Matchers with Section {
   def customCache(res0: Int) = {
 
     val fetchSameTwice: Fetch[(User, User)] = for {
-      one <- getUser(1)
+      one     <- getUser(1)
       another <- getUser(1)
     } yield (one, another)
 

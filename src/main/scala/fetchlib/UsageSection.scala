@@ -1,3 +1,8 @@
+/*
+ * scala-exercises - exercises-fetch
+ * Copyright (C) 2015-2016 47 Degrees, LLC. <http://www.47deg.com>
+ */
+
 package fetchlib
 
 import cats.data.NonEmptyList
@@ -171,7 +176,7 @@ object UsageSection extends FlatSpec with Matchers with Section {
    */
   def sequencing(res0: Tuple2[User, User], res1: Int) = {
     val fetchTwoUsers: Fetch[(User, User)] = for {
-      aUser <- getUser(1)
+      aUser       <- getUser(1)
       anotherUser <- getUser(aUser.id + 1)
     } yield (aUser, anotherUser)
 
@@ -240,7 +245,7 @@ object UsageSection extends FlatSpec with Matchers with Section {
    */
   def caching(res0: Tuple2[User, User], res1: Int) = {
     val fetchCached: Fetch[(User, User)] = for {
-      aUser <- getUser(1)
+      aUser       <- getUser(1)
       anotherUser <- getUser(1)
     } yield (aUser, anotherUser)
 
@@ -264,9 +269,10 @@ object UsageSection extends FlatSpec with Matchers with Section {
    */
   def synchronous(res0: Boolean) = {
     val threadSyncSource = new DataSource[Unit, Long] {
-      override def fetchOne(id: Unit): Query[Option[Long]] = {
+      override def name = "synchronous"
+
+      override def fetchOne(id: Unit): Query[Option[Long]] =
         Query.sync(Some(Thread.currentThread.getId))
-      }
       override def fetchMany(ids: NonEmptyList[Unit]): Query[Map[Unit, Long]] =
         batchingNotSupported(ids)
     }
@@ -285,9 +291,11 @@ object UsageSection extends FlatSpec with Matchers with Section {
    */
   def asynchronous(res0: Boolean) = {
     val threadAsyncSource = new DataSource[Unit, Long] {
-      override def fetchOne(id: Unit): Query[Option[Long]] = {
-        Query.async((ok, fail) => ok(Some(Thread.currentThread.getId)))
-      }
+      override def name = "asynchronous"
+
+      override def fetchOne(id: Unit): Query[Option[Long]] =
+        Query.async((ok: (Option[Long] => Unit), fail) => { ok(Some(Thread.currentThread.getId)) })
+
       override def fetchMany(ids: NonEmptyList[Unit]): Query[Map[Unit, Long]] =
         batchingNotSupported(ids)
     }
@@ -377,7 +385,7 @@ object UsageSection extends FlatSpec with Matchers with Section {
    */
   def combiningData(res0: Tuple2[Post, PostTopic]) = {
     val fetchMulti: Fetch[(Post, PostTopic)] = for {
-      post <- getPost(1)
+      post  <- getPost(1)
       topic <- getPostTopic(post)
     } yield (post, topic)
 
@@ -423,7 +431,7 @@ object UsageSection extends FlatSpec with Matchers with Section {
    * combinator. It takes a `List[Fetch[A]]` and gives you back a `Fetch[List[A]]`, batching the fetches to the same
    * data source and running fetches to different sources in parallel.
    * Note that the `sequence` combinator is more general and works not only on lists but on any type that
-   * has a [[http://typelevel.org/cats/tut/traverse.html] Traverse] instance.
+   * has a [http://typelevel.org/cats/tut/traverse.html] Traverse] instance.
    *
    * Since `sequence` uses applicative operations internally, the library is able to perform optimizations
    * across all the sequenced fetches.
