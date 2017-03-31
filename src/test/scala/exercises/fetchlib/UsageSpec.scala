@@ -1,3 +1,8 @@
+/*
+ * scala-exercises - exercises-fetch
+ * Copyright (C) 2015-2016 47 Degrees, LLC. <http://www.47deg.com>
+ */
+
 package exercises
 
 import fetchlib._
@@ -24,16 +29,16 @@ class UsageSpec extends Spec with Checkers {
   def `Batching Strategy` =
     check(testSuccess(batching _, (userDatabase(1), userDatabase(2)) :: 1 :: HNil))
 
-  def `Deduplication Strategy` = 
+  def `Deduplication Strategy` =
     check(testSuccess(deduplication _, (userDatabase(1), userDatabase(1)) :: 1 :: HNil))
 
-  def `Caching Strategy` = 
+  def `Caching Strategy` =
     check(testSuccess(caching _, (userDatabase(1), userDatabase(1)) :: 1 :: HNil))
 
-  def `Sync Queries` = 
+  def `Sync Queries` =
     check(testSuccess(synchronous _, true :: HNil))
 
-  def `Async Queries` = 
+  def `Async Queries` =
     check(testSuccess(asynchronous _, false :: HNil))
 
   def `Combining Data` =
