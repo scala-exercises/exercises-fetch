@@ -1,3 +1,8 @@
+/*
+ * scala-exercises - exercises-fetch
+ * Copyright (C) 2015-2016 47 Degrees, LLC. <http://www.47deg.com>
+ */
+
 package fetchlib
 
 import cats.data.NonEmptyList
@@ -30,9 +35,8 @@ object ErrorHandlingSection extends FlatSpec with Matchers with Section {
    * val fetchError: Fetch[User] = (new Exception("Oh noes")).fetch
    * }}}
    */
-  def failedFetch(res0: Boolean) = {
+  def failedFetch(res0: Boolean) =
     Try(fetchError.runA[Id]).isFailure should be(res0)
-  }
 
   /**
    * Since `Id` runs the fetch eagerly, the only way to recover from errors is to capture the exception.

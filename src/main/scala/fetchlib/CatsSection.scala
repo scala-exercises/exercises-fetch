@@ -1,3 +1,8 @@
+/*
+ * scala-exercises - exercises-fetch
+ * Copyright (C) 2015-2016 47 Degrees, LLC. <http://www.47deg.com>
+ */
+
 package fetchlib
 
 import cats.data.NonEmptyList
@@ -8,7 +13,6 @@ import cats._
 import fetch.unsafe.implicits._
 import fetch.syntax._
 import scala.util.Try
-
 
 import org.scalaexercises.definitions._
 

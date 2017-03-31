@@ -1,3 +1,8 @@
+/*
+ * scala-exercises - exercises-fetch
+ * Copyright (C) 2015-2016 47 Degrees, LLC. <http://www.47deg.com>
+ */
+
 package exercises
 
 import fetchlib._
@@ -16,12 +21,12 @@ class ConcurrencyMonadsSpec extends Spec with Checkers {
   import Test._
 
   def `Std Future` =
-    check(testSuccess(stdFutures _, (2,2) :: HNil))
+    check(testSuccess(stdFutures _, (2, 2) :: HNil))
 
   def `Monix Task` =
-    check(testSuccess(monixTask _, (2,2) :: HNil))
+    check(testSuccess(monixTask _, (2, 2) :: HNil))
 
   def `Custom Types via Monad Error` =
-    check(testSuccess(customTypes _, (2,2) :: HNil))
- 
+    check(testSuccess(customTypes _, (2, 2) :: HNil))
+
 }

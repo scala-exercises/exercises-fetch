@@ -1,3 +1,8 @@
+/*
+ * scala-exercises - exercises-fetch
+ * Copyright (C) 2015-2016 47 Degrees, LLC. <http://www.47deg.com>
+ */
+
 package fetchlib
 
 import cats.data.NonEmptyList
@@ -76,7 +81,7 @@ object ConcurrencyMonadsSection extends FlatSpec with Matchers with Section {
     }
 
     val result = Await.result(op, 5 seconds)
- 
+
     result should be(res0)
   }
 
@@ -105,7 +110,7 @@ object ConcurrencyMonadsSection extends FlatSpec with Matchers with Section {
   def monixTask(res0: Tuple2[Int, Int]) = {
 
     val scheduler = Scheduler.Implicits.global
-    val task = Fetch.run[Task](homePage)
+    val task      = Fetch.run[Task](homePage)
 
     val op = homePage.runA[Task] map {
       case (posts, topics) =>
@@ -186,32 +191,33 @@ object ConcurrencyMonadsSection extends FlatSpec with Matchers with Section {
    * Because of this we'll override `map` for not using `flatMap` and `product` for expressing the independence of two computations.
    */
   def customTypes(res0: Tuple2[Int, Int]) = {
-    implicit def taskFetchMonadError(implicit TM: Monad[Task]): FetchMonadError[Task] = new FetchMonadError[Task] {
-      override def tailRecM[A, B](a: A)(f: A => Task[Either[A, B]]): Task[B] =
-        TM.tailRecM(a)(f)
+    implicit def taskFetchMonadError(implicit TM: Monad[Task]): FetchMonadError[Task] =
+      new FetchMonadError[Task] {
+        override def tailRecM[A, B](a: A)(f: A => Task[Either[A, B]]): Task[B] =
+          TM.tailRecM(a)(f)
 
-      override def map[A, B](fa: Task[A])(f: A => B): Task[B] =
-        fa.map(f)
+        override def map[A, B](fa: Task[A])(f: A => B): Task[B] =
+          fa.map(f)
 
-      override def product[A, B](fa: Task[A], fb: Task[B]): Task[(A, B)] =
-        Task.zip2(Task.fork(fa), Task.fork(fb)) // introduce parallelism with Task#fork
+        override def product[A, B](fa: Task[A], fb: Task[B]): Task[(A, B)] =
+          Task.zip2(Task.fork(fa), Task.fork(fb)) // introduce parallelism with Task#fork
 
-      def pure[A](x: A): Task[A] =
-        Task.now(x)
+        def pure[A](x: A): Task[A] =
+          Task.now(x)
 
-      def handleErrorWith[A](fa: Task[A])(f: FetchException => Task[A]): Task[A] =
-        fa.onErrorHandleWith({
-          case ex: FetchException => f(ex)
-        })
+        def handleErrorWith[A](fa: Task[A])(f: FetchException => Task[A]): Task[A] =
+          fa.onErrorHandleWith({
+            case ex: FetchException => f(ex)
+          })
 
-      def raiseError[A](e: FetchException): Task[A] =
-        Task.raiseError(e)
+        def raiseError[A](e: FetchException): Task[A] =
+          Task.raiseError(e)
 
-      def flatMap[A, B](fa: Task[A])(f: A => Task[B]): Task[B] =
-        fa.flatMap(f)
+        def flatMap[A, B](fa: Task[A])(f: A => Task[B]): Task[B] =
+          fa.flatMap(f)
 
-      override def runQuery[A](q: Query[A]): Task[A] = queryToTask(q)
-    }
+        override def runQuery[A](q: Query[A]): Task[A] = queryToTask(q)
+      }
 
     val scheduler = Scheduler.Implicits.global
 

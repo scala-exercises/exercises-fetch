@@ -1,4 +1,4 @@
-#Scala Exercises - Fetch library
+# Scala Exercises - Fetch library
 
 ------------------------
 
@@ -15,7 +15,7 @@ Scala Exercises is available at [scala-exercises.org](https://scala-exercises.or
 Contributions welcome! Please join our [Gitter channel](https://gitter.im/scala-exercises/scala-exercises)
 to get involved, or visit our [GitHub site](https://github.com/scala-exercises).
 
-##License
+## License
 
 Copyright (C) 2015-2016 47 Degrees, LLC.
 Reactive, scalable software solutions.
