@@ -32,7 +32,7 @@ import org.scalaexercises.definitions._
  *
  * @param name cats
  */
-object CatsSection extends FlatSpec with Matchers with Section {
+object DebuggingSection extends FlatSpec with Matchers with Section {
 
   /**
 	  * = Applicative =
