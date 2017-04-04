@@ -41,14 +41,11 @@ object CatsSection extends FlatSpec with Matchers with Section {
    * are from different types, and apply a pure function to their results. We can use it
    * as a more powerful alternative to the `product` method or `Fetch#join`:
    *
-   * ```tut:silent
-   * ```
-   *
    * Notice how the queries to posts are batched.
    *
-   * ```tut:book
+   * {{{
    * fetchThree.runA[Id]
-   * ```
+   * }}}
    *
    */
   def applicative(res0: Int) = {

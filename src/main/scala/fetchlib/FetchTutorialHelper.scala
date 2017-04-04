@@ -160,4 +160,28 @@ object FetchTutorialHelper {
       case FetchMany(ids, _)    => ids.toList.size
       case Concurrent(requests) => requests.toList.map(requestFetches).sum
     }
+  object SequentialUserSource extends DataSource[UserId, User] {
+    override def name = "SequentialUser"
+
+    override def maxBatchSize: Option[Int] = Some(2)
+
+    override def batchExecution: ExecutionType = Sequential
+
+    override def fetchOne(id: UserId): Query[Option[User]] = {
+      Query.sync({
+        latency(userDatabase.get(id), s"One User $id")
+
+      })
+    }
+
+    override def fetchMany(ids: NonEmptyList[UserId]): Query[Map[UserId, User]] = {
+      Query.sync({
+        latency(userDatabase.filterKeys(ids.toList.contains), s"Many Users $ids")
+
+      })
+    }
+
+  }
+
+  def getSequentialUser(id: Int): Fetch[User] = Fetch(id)(SequentialUserSource)
 }

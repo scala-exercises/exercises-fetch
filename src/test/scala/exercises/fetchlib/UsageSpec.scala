@@ -24,28 +24,28 @@ class UsageSpec extends Spec with Checkers {
     check(testSuccess(creatingAndRunning _, userDatabase(1) :: HNil))
 
   def `Sequencing Strategy` =
-    check(testSuccess(sequencing _, (userDatabase(1), userDatabase(2)) :: 2 :: HNil))
+    check(testSuccess(sequencing _, (userDatabase(1), userDatabase(2)) :: HNil))
 
   def `Batching Strategy` =
-    check(testSuccess(batching _, (userDatabase(1), userDatabase(2)) :: 1 :: HNil))
+    check(testSuccess(batching _, (userDatabase(1), userDatabase(2)) :: HNil))
 
   def `Deduplication Strategy` =
-    check(testSuccess(deduplication _, (userDatabase(1), userDatabase(1)) :: 1 :: HNil))
+    check(testSuccess(deduplication _, (userDatabase(1), userDatabase(1)) :: HNil))
 
   def `Caching Strategy` =
-    check(testSuccess(caching _, (userDatabase(1), userDatabase(1)) :: 1 :: HNil))
+    check(testSuccess(caching _, (userDatabase(1), userDatabase(1)) :: HNil))
 
   def `Sync Queries` =
-    check(testSuccess(synchronous _, true :: HNil))
+    check(testSuccess(synchronous _, "Computing 42" :: HNil))
 
-  def `Async Queries` =
-    check(testSuccess(asynchronous _, false :: HNil))
+  def `Sync Queries` =
+    check(testSuccess(catsSynchronous _, "Computing 42" :: HNil))
 
   def `Combining Data` =
     check(testSuccess(combiningData _, (postDatabase(1), "applicative") :: HNil))
 
   def `Combining Concurrency` =
-    check(testSuccess(concurrency _, (postDatabase(1), userDatabase(2)) :: 1 :: HNil))
+    check(testSuccess(concurrency _, (postDatabase(1), userDatabase(2)) :: HNil))
 
   def `Combinators sequence` =
     check(testSuccess(sequence _, List(userDatabase(1), userDatabase(2), userDatabase(3)) :: HNil))

@@ -86,7 +86,7 @@ object ConcurrencyMonadsSection extends FlatSpec with Matchers with Section {
   }
 
   /**
-   * ## Monix Task
+   * = Monix Task =
    *
    * The [Monix](https://monix.io/) library provides an abstraction for lazy, asynchronous computations with its [Task](https://monix.io/docs/2x/eval/task.html) type.
    *
