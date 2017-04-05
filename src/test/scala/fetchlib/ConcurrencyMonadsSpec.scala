@@ -5,20 +5,16 @@
 
 package exercises
 
-import fetchlib._
-import shapeless.HNil
-
 import org.scalaexercises.Test
 import org.scalatest.Spec
 import org.scalatest.prop.Checkers
-
-import org.scalacheck.Shapeless._
+import shapeless.HNil
 
 class ConcurrencyMonadsSpec extends Spec with Checkers {
 
-  import FetchTutorialHelper._
-  import ConcurrencyMonadsSection._
   import Test._
+  import fetchlib.ConcurrencyMonadsSection._
+  import fetchlib.FetchTutorialHelper._
 
   def `Std Future` =
     check(testSuccess(stdFutures _, (2, 2) :: HNil))

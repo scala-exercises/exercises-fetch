@@ -5,6 +5,7 @@ import sbt._
 import sbtorgpolicies._
 import sbtorgpolicies.model._
 import sbtorgpolicies.OrgPoliciesPlugin.autoImport._
+import org.scalaexercises.plugin.sbtexercise.ExerciseCompilerPlugin.fetchContributors
 
 object ProjectPlugin extends AutoPlugin {
 
@@ -28,6 +29,7 @@ object ProjectPlugin extends AutoPlugin {
       scalaVersion := "2.11.8",
       scalaOrganization := "org.scala-lang",
       crossScalaVersions := Seq("2.11.8"),
+      fetchContributors := false,
       resolvers ++= Seq(
         Resolver.mavenLocal,
         Resolver.sonatypeRepo("snapshots"),

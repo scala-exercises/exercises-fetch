@@ -5,15 +5,11 @@
 
 package fetchlib
 
-import cats.data.NonEmptyList
-import org.scalatest.{FlatSpec, Matchers, _}
-import fetch._
 import cats._
-import fetch.unsafe.implicits._
 import fetch.syntax._
-
-import scala.util.Try
+import fetch.unsafe.implicits._
 import org.scalaexercises.definitions.Section
+import org.scalatest.{FlatSpec, Matchers}
 
 /**
  * = Debugging =

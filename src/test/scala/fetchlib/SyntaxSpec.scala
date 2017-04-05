@@ -5,20 +5,16 @@
 
 package exercises
 
-import fetchlib._
-import shapeless.HNil
-
 import org.scalaexercises.Test
 import org.scalatest.Spec
 import org.scalatest.prop.Checkers
-
-import org.scalacheck.Shapeless._
+import shapeless.HNil
 
 class SyntaxSpec extends Spec with Checkers {
 
-  import FetchTutorialHelper._
-  import SyntaxSection._
   import Test._
+  import fetchlib.SyntaxSection._
+  import fetchlib.FetchTutorialHelper._
 
   def `Implicit Syntax` =
     check(testSuccess(implicitSyntax _, 42 :: HNil))
@@ -34,5 +30,23 @@ class SyntaxSpec extends Spec with Checkers {
 
   def `runF Syntax` =
     check(testSuccess(runF _, 1 :: true :: HNil))
+
+  def `Pure Syntax` =
+    check(testSuccess(companionPure _, 42 :: HNil))
+
+  def `Join Syntax` =
+    check(testSuccess(companionJoin _, (Post(1, 2, "An article"), User(2, "@two")) :: HNil))
+
+  def `Sequence Syntax` =
+    check(
+      testSuccess(
+        companionSequence _,
+        List(User(1, "@one"), User(2, "@two"), User(3, "@three")) :: HNil))
+
+  def `Traverse Syntax` =
+    check(
+      testSuccess(
+        companionTraverse _,
+        List(User(1, "@one"), User(2, "@two"), User(3, "@three")) :: HNil))
 
 }

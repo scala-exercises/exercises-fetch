@@ -5,20 +5,16 @@
 
 package exercises
 
-import fetchlib._
-import shapeless.HNil
-
 import org.scalaexercises.Test
 import org.scalatest.Spec
 import org.scalatest.prop.Checkers
-
-import org.scalacheck.Shapeless._
+import shapeless.HNil
 
 class UsageSpec extends Spec with Checkers {
 
-  import FetchTutorialHelper._
-  import UsageSection._
   import Test._
+  import fetchlib.UsageSection._
+  import fetchlib.FetchTutorialHelper._
 
   def `Creating And Running` =
     check(testSuccess(creatingAndRunning _, userDatabase(1) :: HNil))
@@ -38,7 +34,7 @@ class UsageSpec extends Spec with Checkers {
   def `Sync Queries` =
     check(testSuccess(synchronous _, "Computing 42" :: HNil))
 
-  def `Sync Queries` =
+  def `Cats Sync Queries` =
     check(testSuccess(catsSynchronous _, "Computing 42" :: HNil))
 
   def `Combining Data` =

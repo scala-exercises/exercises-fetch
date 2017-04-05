@@ -5,22 +5,16 @@
 
 package fetchlib
 
-import cats.data.NonEmptyList
-import org.scalatest.{FlatSpec, Matchers, _}
 import fetch._
-import cats._
+import fetch.monixTask.implicits._
 import fetch.syntax._
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{Await, Future}
-import scala.concurrent.duration._
-
 import monix.eval.Task
 import monix.execution.Scheduler
-
-import fetch.monixTask.implicits._
-import scala.util.Try
 import org.scalaexercises.definitions.Section
+import org.scalatest.{FlatSpec, Matchers}
+
+import scala.concurrent.Await
+import scala.concurrent.duration._
 
 /**
  * = Concurrency monads =
@@ -70,8 +64,8 @@ object ConcurrencyMonadsSection extends FlatSpec with Matchers with Section {
     import fetch.implicits._
 
     import scala.concurrent.ExecutionContext.Implicits.global
-    import scala.concurrent.{Await, Future}
     import scala.concurrent.duration._
+    import scala.concurrent.{Await, Future}
 
     val op = homePage.runA[Future] map {
       case (posts, topics) => {
@@ -216,8 +210,9 @@ object ConcurrencyMonadsSection extends FlatSpec with Matchers with Section {
     val scheduler = Scheduler.Implicits.global
 
     val op = homePage.runA[Task](taskFetchMonadError) map {
-      case (posts, topics) =>
+      case (posts, topics) => {
         (posts.size, topics.size)
+      }
     }
 
     val result = Await.result(op.runAsync(scheduler), 5 seconds)

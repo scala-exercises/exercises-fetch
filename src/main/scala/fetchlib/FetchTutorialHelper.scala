@@ -5,28 +5,24 @@
 
 package fetchlib
 
-import fetch._
-import fetch.unsafe.implicits._
-import fetch.syntax._
-
-import cats._
 import cats.Eval
-import cats.syntax.applicativeError._
-import cats.instances.list._
 import cats.data.NonEmptyList
-
+import cats.instances.list._
 import cats.syntax.cartesian._
 import cats.syntax.traverse._
-
-import monix.eval.Task
-
-import monix.execution.Cancelable
-import scala.concurrent.duration._
+import fetch._
 import fetch.monixTask.implicits._
+import fetch.syntax._
+import fetch.unsafe.implicits._
+import monix.eval.Task
+import monix.execution.Cancelable
+
+import scala.concurrent.duration._
 
 object FetchTutorialHelper {
 
   type UserId = Int
+
   case class User(id: UserId, username: String)
 
   def latency[A](result: A, msg: String) = {
@@ -53,6 +49,7 @@ object FetchTutorialHelper {
         latency(userDatabase.get(id), s"One User $id")
       })
     }
+
     override def fetchMany(ids: NonEmptyList[UserId]): Query[Map[UserId, User]] = {
       Query.sync({
         latency(userDatabase.filterKeys(ids.toList.contains), s"Many Users $ids")
@@ -65,6 +62,7 @@ object FetchTutorialHelper {
   val cache = InMemoryCache(UserSource.identity(1) -> User(1, "@dialelo"))
 
   type PostId = Int
+
   case class Post(id: PostId, author: UserId, content: String)
 
   val postDatabase: Map[PostId, Post] = Map(
@@ -81,6 +79,7 @@ object FetchTutorialHelper {
         latency(postDatabase.get(id), s"One Post $id")
       })
     }
+
     override def fetchMany(ids: NonEmptyList[PostId]): Query[Map[PostId, Post]] = {
       Query.sync({
         latency(postDatabase.filterKeys(ids.toList.contains), s"Many Posts $ids")
@@ -100,14 +99,27 @@ object FetchTutorialHelper {
 
     override def fetchOne(id: Post): Query[Option[PostTopic]] = {
       Query.sync({
-        val topic = if (id.id % 2 == 0) "monad" else "applicative"
+        val topic = if (id.id % 2 == 0) {
+          "monad"
+        } else {
+          "applicative"
+        }
         latency(Option(topic), s"One Post Topic $id")
       })
     }
+
     override def fetchMany(ids: NonEmptyList[Post]): Query[Map[Post, PostTopic]] = {
       Query.sync({
         val result =
-          ids.toList.map(id => (id, if (id.id % 2 == 0) "monad" else "applicative")).toMap
+          ids.toList
+            .map(id => {
+              (id, if (id.id % 2 == 0) {
+                "monad"
+              } else {
+                "applicative"
+              })
+            })
+            .toMap
         latency(result, s"Many Post Topics $ids")
       })
     }
@@ -118,41 +130,68 @@ object FetchTutorialHelper {
   val postsByAuthor: Fetch[List[Post]] = for {
     posts   <- List(1, 2).traverse(getPost)
     authors <- posts.traverse(getAuthor)
-    ordered = (posts zip authors).sortBy({ case (_, author) => author.username }).map(_._1)
-  } yield ordered
+    ordered = (posts zip authors)
+      .sortBy({
+        case (_, author) => {
+          author.username
+        }
+      })
+      .map(_._1)
+  } yield {
+    ordered
+  }
 
   val postTopics: Fetch[Map[PostTopic, Int]] = for {
     posts  <- List(2, 3).traverse(getPost)
     topics <- posts.traverse(getPostTopic)
     countByTopic = (posts zip topics).groupBy(_._2).mapValues(_.size)
-  } yield countByTopic
+  } yield {
+    countByTopic
+  }
 
   val homePage = (postsByAuthor |@| postTopics).tupled
 
   final case class ForgetfulCache() extends DataSourceCache {
-    override def get[A](k: DataSourceIdentity): Option[A]               = None
+    override def get[A](k: DataSourceIdentity): Option[A] = None
+
     override def update[A](k: DataSourceIdentity, v: A): ForgetfulCache = this
   }
 
   val fetchError: Fetch[User] = (new Exception("Oh noes")).fetch
 
-  def queryToTask[A](q: Query[A]): Task[A] = q match {
-    case Sync(e) => evalToTask(e)
-    case Async(action, timeout) => {
-      val task: Task[A] = Task.create((scheduler, callback) => {
-        scheduler.execute(new Runnable {
-          def run() = action(callback.onSuccess, callback.onError)
+  def queryToTask[A](q: Query[A]): Task[A] = {
+    q match {
+      case Sync(e) => {
+        evalToTask(e)
+      }
+      case Async(action, timeout) => {
+        val task: Task[A] = Task.create((scheduler, callback) => {
+          scheduler.execute(new Runnable {
+            def run() = action(callback.onSuccess, callback.onError)
+          })
+
+          Cancelable.empty
         })
 
-        Cancelable.empty
-      })
-
-      timeout match {
-        case finite: FiniteDuration => task.timeout(finite)
-        case _                      => task
+        timeout match {
+          case finite: FiniteDuration => {
+            task.timeout(finite)
+          }
+          case _ => {
+            task
+          }
+        }
+      }
+      case Ap(qf, qx) => {
+        Task
+          .zip2(queryToTask(qf), queryToTask(qx))
+          .map({
+            case (f, x) => {
+              f(x)
+            }
+          })
       }
     }
-    case Ap(qf, qx) => Task.zip2(queryToTask(qf), queryToTask(qx)).map({ case (f, x) => f(x) })
   }
 
   def totalFetched(rounds: Seq[Round]): Int =

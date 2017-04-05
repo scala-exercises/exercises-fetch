@@ -5,17 +5,13 @@
 
 package fetchlib
 
-import org.scalaexercises.definitions.Section
-import org.scalatest.{FlatSpec, Matchers, _}
-
-import cats.data.NonEmptyList
-import fetch._
 import cats._
 import cats.syntax.cartesian._
-import fetch.unsafe.implicits._
+import fetch._
 import fetch.syntax._
-
-import scala.util.Try
+import fetch.unsafe.implicits._
+import org.scalaexercises.definitions.Section
+import org.scalatest.{FlatSpec, Matchers}
 
 /**
  * = Cats =
@@ -74,8 +70,9 @@ object CatsSection extends FlatSpec with Matchers with Section {
     val fetchLoves: Fetch[String] = Fetch
       .join(getUser(1), getUser(2))
       .map({
-        case (one, other) =>
+        case (one, other) => {
           s"${one.username} loves ${other.username}"
+        }
       })
 
     fetchLoves.runA[Id] shouldBe res0

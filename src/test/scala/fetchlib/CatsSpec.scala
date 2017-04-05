@@ -5,20 +5,15 @@
 
 package exercises
 
-import fetchlib._
-import shapeless.HNil
-
 import org.scalaexercises.Test
 import org.scalatest.Spec
 import org.scalatest.prop.Checkers
-
-import org.scalacheck.Shapeless._
+import shapeless.HNil
 
 class CatsSpec extends Spec with Checkers {
 
-  import FetchTutorialHelper._
-  import CatsSection._
   import Test._
+  import fetchlib.CatsSection._
 
   def `Cartesian Builder` =
     check(testSuccess(applicative _, "@one is friends with @two" :: HNil))

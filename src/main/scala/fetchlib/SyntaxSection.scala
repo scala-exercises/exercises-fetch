@@ -5,15 +5,14 @@
 
 package fetchlib
 
-import cats.data.NonEmptyList
-import org.scalatest.{FlatSpec, Matchers, _}
-import fetch._
 import cats._
-import fetch.unsafe.implicits._
+import fetch._
 import fetch.syntax._
+import fetch.unsafe.implicits._
+import org.scalaexercises.definitions.Section
+import org.scalatest.{FlatSpec, Matchers}
 
 import scala.util.Try
-import org.scalaexercises.definitions.Section
 
 /**
  * = Syntax =
@@ -133,7 +132,7 @@ object SyntaxSection extends FlatSpec with Matchers with Section {
   def companionJoin(res0: Tuple2[Post, User]) = {
     val fetchJoined: Fetch[(Post, User)] = Fetch.join(getPost(1), getUser(2))
 
-    Fetch.run[Id](fetchJoined) shouldBe res0 //(Post(1,2,An article),User(2,@two))
+    Fetch.run[Id](fetchJoined) shouldBe res0
   }
 
   /**
@@ -144,10 +143,10 @@ object SyntaxSection extends FlatSpec with Matchers with Section {
 	  *
 	  * Note that Fetch#sequence is not as general as the sequence method from Traverse, but performs the same optimizations.
 	  */
-  def companionJoin(res0: List[User]) = {
+  def companionSequence(res0: List[User]) = {
     val fetchSequence: Fetch[List[User]] = Fetch.sequence(List(getUser(1), getUser(2), getUser(3)))
 
-    Fetch.run[Id](fetchSequence) shouldBe res0 //List(User(1,@one), User(2,@two), User(3,@three))
+    Fetch.run[Id](fetchSequence) shouldBe res0
   }
 
   /**
@@ -157,10 +156,10 @@ object SyntaxSection extends FlatSpec with Matchers with Section {
 	  *
 	  * Note that Fetch#traverse is not as general as the traverse method from Traverse, but performs the same optimizations.
 	  */
-  def companionJoin(res0: List[User]) = {
+  def companionTraverse(res0: List[User]) = {
 
     val fetchTraverse: Fetch[List[User]] = Fetch.traverse(List(1, 2, 3))(getUser)
 
-    Fetch.run[Id](fetchTraverse) shouldBe res0 //List(User(1,@one), User(2,@two), User(3,@three))
+    Fetch.run[Id](fetchTraverse) shouldBe res0
   }
 }

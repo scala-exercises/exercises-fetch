@@ -5,21 +5,15 @@
 
 package fetchlib
 
-import cats.data.NonEmptyList
-import org.scalatest.{FlatSpec, Matchers, _}
-import fetch._
 import cats._
-import fetch.unsafe.implicits._
-import fetch.syntax._
 import cats.instances.list._
 import cats.syntax.cartesian._
 import cats.syntax.traverse._
-
-import scala.concurrent._
-import ExecutionContext.Implicits.global
-import scala.concurrent.duration._
-import fetch.implicits._
+import fetch._
+import fetch.syntax._
+import fetch.unsafe.implicits._
 import org.scalaexercises.definitions.Section
+import org.scalatest.{FlatSpec, Matchers}
 
 /**
  * = Introduction =
@@ -309,7 +303,7 @@ object UsageSection extends FlatSpec with Matchers with Section {
 	  *     Query.sync(42)
 	  * }}}
 	  *
-	  * @param name queries
+	  *
 	  */
   def synchronous(res0: String) =
     Query.sync({ println("Computing 42"); 42 }) shouldBe res0

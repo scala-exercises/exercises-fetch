@@ -5,17 +5,14 @@
 
 package fetchlib
 
-import org.scalaexercises.definitions.Section
-import org.scalatest.{FlatSpec, Matchers, _}
-
-import cats.data.NonEmptyList
-import fetch._
 import cats._
-import fetch.unsafe.implicits._
-import fetch.syntax._
 import cats.instances.list._
-import cats.syntax.cartesian._
 import cats.syntax.traverse._
+import fetch._
+import fetch.syntax._
+import fetch.unsafe.implicits._
+import org.scalaexercises.definitions.Section
+import org.scalatest.{FlatSpec, Matchers}
 
 /**
  * = Batching =
@@ -63,7 +60,7 @@ object BatchingSection extends FlatSpec with Matchers with Section {
 	  * We have defined the maximum batch size to be 2,
 	  * let’s see what happens when running a fetch that needs more than two users:
 	  */
-  def maxSize(res0: Int) = {
+  def maximumSize(res0: Int) = {
     val fetchManyBatchedUsers: Fetch[List[User]] = List(1, 2, 3, 4).traverse(getSequentialUser)
     fetchManyBatchedUsers.runA[Id].size shouldBe res0
   }

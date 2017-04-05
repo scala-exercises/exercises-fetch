@@ -14,19 +14,22 @@ import org.scalaexercises.definitions.Library
 object FetchLibrary extends Library {
   override def logoPath = "fetch"
 
-  override def owner      = "scala-exercises"
+  override def owner = "scala-exercises"
+
   override def repository = "exercises-fetch"
 
   override def color = Some("#2F2859")
 
-  override def sections = List(
-    UsageSection,
-    CachingSection,
-    BatchingSection,
-    ErrorHandlingSection,
-    SyntaxSection,
-    CatsSection,
-    ConcurrencyMonadsSection,
-    DebuggingSection
-  )
+  override def sections = {
+    List(
+      UsageSection,
+      CachingSection,
+      BatchingSection,
+      ErrorHandlingSection,
+      SyntaxSection,
+      CatsSection,
+      ConcurrencyMonadsSection,
+      DebuggingSection
+    )
+  }
 }
