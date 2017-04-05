@@ -5,8 +5,10 @@
 
 package fetchlib
 
+import org.scalaexercises.definitions.Section
+import org.scalatest.{FlatSpec, Matchers, _}
+
 import cats.data.NonEmptyList
-import org.scalatest._
 import fetch._
 import cats._
 import fetch.unsafe.implicits._
@@ -14,7 +16,6 @@ import fetch.syntax._
 import cats.instances.list._
 import cats.syntax.cartesian._
 import cats.syntax.traverse._
-import org.scalaexercises.definitions._
 
 /**
  * = Batching =

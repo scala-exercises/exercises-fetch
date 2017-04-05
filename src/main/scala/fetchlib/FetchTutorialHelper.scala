@@ -5,10 +5,26 @@
 
 package fetchlib
 
-object FetchTutorialHelper {
+import fetch._
+import fetch.unsafe.implicits._
+import fetch.syntax._
 
-  import fetch._
-  import cats.instances.list._
+import cats._
+import cats.Eval
+import cats.syntax.applicativeError._
+import cats.instances.list._
+import cats.data.NonEmptyList
+
+import cats.syntax.cartesian._
+import cats.syntax.traverse._
+
+import monix.eval.Task
+
+import monix.execution.Cancelable
+import scala.concurrent.duration._
+import fetch.monixTask.implicits._
+
+object FetchTutorialHelper {
 
   type UserId = Int
   case class User(id: UserId, username: String)
@@ -21,14 +37,13 @@ object FetchTutorialHelper {
     result
   }
 
-  import cats.data.NonEmptyList
-
   val userDatabase: Map[UserId, User] = Map(
     1 -> User(1, "@one"),
     2 -> User(2, "@two"),
     3 -> User(3, "@three"),
     4 -> User(4, "@four")
   )
+  val fetchException: Fetch[User] = (new Exception("Oh noes")).fetch
 
   implicit object UserSource extends DataSource[UserId, User] {
     override def name = "User"
@@ -46,6 +61,8 @@ object FetchTutorialHelper {
   }
 
   def getUser(id: UserId): Fetch[User] = Fetch(id)
+
+  val cache = InMemoryCache(UserSource.identity(1) -> User(1, "@dialelo"))
 
   type PostId = Int
   case class Post(id: PostId, author: UserId, content: String)
@@ -98,20 +115,6 @@ object FetchTutorialHelper {
 
   def getPostTopic(post: Post): Fetch[PostTopic] = Fetch(post)
 
-  val cache = InMemoryCache(UserSource.identity(1) -> User(1, "@dialelo"))
-
-  final case class ForgetfulCache() extends DataSourceCache {
-    override def get[A](k: DataSourceIdentity): Option[A]               = None
-    override def update[A](k: DataSourceIdentity, v: A): ForgetfulCache = this
-  }
-
-  import fetch.syntax._
-
-  val fetchError: Fetch[User] = (new Exception("Oh noes")).fetch
-
-  import cats.syntax.cartesian._
-  import cats.syntax.traverse._
-
   val postsByAuthor: Fetch[List[Post]] = for {
     posts   <- List(1, 2).traverse(getPost)
     authors <- posts.traverse(getAuthor)
@@ -126,11 +129,12 @@ object FetchTutorialHelper {
 
   val homePage = (postsByAuthor |@| postTopics).tupled
 
-  import monix.eval.Task
+  final case class ForgetfulCache() extends DataSourceCache {
+    override def get[A](k: DataSourceIdentity): Option[A]               = None
+    override def update[A](k: DataSourceIdentity, v: A): ForgetfulCache = this
+  }
 
-  import monix.execution.Cancelable
-  import scala.concurrent.duration._
-  import fetch.monixTask.implicits._
+  val fetchError: Fetch[User] = (new Exception("Oh noes")).fetch
 
   def queryToTask[A](q: Query[A]): Task[A] = q match {
     case Sync(e) => evalToTask(e)
@@ -160,6 +164,7 @@ object FetchTutorialHelper {
       case FetchMany(ids, _)    => ids.toList.size
       case Concurrent(requests) => requests.toList.map(requestFetches).sum
     }
+
   object SequentialUserSource extends DataSource[UserId, User] {
     override def name = "SequentialUser"
 
@@ -184,4 +189,24 @@ object FetchTutorialHelper {
   }
 
   def getSequentialUser(id: Int): Fetch[User] = Fetch(id)(SequentialUserSource)
+
+  val failingFetch: Fetch[String] = for {
+    a <- getUser(1)
+    b <- getUser(2)
+    c <- fetchException
+  } yield s"${a.username} loves ${b.username}"
+
+  val result: Eval[Either[FetchException, String]] =
+    FetchMonadError[Eval].attempt(failingFetch.runA[Eval])
+  val batched: Fetch[List[User]] = Fetch.multiple(1, 2)(UserSource)
+  val cached: Fetch[User]        = getUser(2)
+  val concurrent: Fetch[(List[User], List[Post])] =
+    (List(1, 2, 3).traverse(getUser) |@| List(1, 2, 3).traverse(getPost)).tupled
+
+  val interestingFetch = for {
+    users       <- batched
+    anotherUser <- cached
+    _           <- concurrent
+  } yield "done"
+
 }

@@ -5,7 +5,7 @@
 
 package fetchlib
 
-import org.scalaexercises.definitions._
+import org.scalaexercises.definitions.Library
 
 /** Fetch is a library for making access to data both simple & efficient.
  *
@@ -22,9 +22,11 @@ object FetchLibrary extends Library {
   override def sections = List(
     UsageSection,
     CachingSection,
+    BatchingSection,
     ErrorHandlingSection,
     SyntaxSection,
     CatsSection,
-    ConcurrencyMonadsSection
+    ConcurrencyMonadsSection,
+    DebuggingSection
   )
 }

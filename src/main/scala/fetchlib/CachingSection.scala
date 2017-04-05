@@ -5,18 +5,17 @@
 
 package fetchlib
 
-import cats.data.NonEmptyList
-import org.scalatest._
-import fetch._
+import org.scalaexercises.definitions.Section
+import org.scalatest.{FlatSpec, Matchers, _}
 
+import cats.data.NonEmptyList
+import fetch._
 import cats._
 import fetch.unsafe.implicits._
 import fetch.syntax._
 import cats.instances.list._
 import cats.syntax.cartesian._
 import cats.syntax.traverse._
-
-import org.scalaexercises.definitions._
 
 /**
  * = Caching =
@@ -43,23 +42,23 @@ object CachingSection extends FlatSpec with Matchers with Section {
   def prepopulating(res0: User) = {
     val fetchUser: Fetch[User] = getUser(1)
     val cache                  = InMemoryCache(UserSource.identity(1) -> User(1, "@dialelo"))
-    Fetch.run[Id](fetchUser, cache) should be(res0)
+    Fetch.run[Id](fetchUser, cache) shouldBe res0
   }
 
   /**
 	  * And as the first when using fetch syntax:
 	  * {{{
 	  *fetchUser.runA[Id](cache)
-	  * res23: cats.Id[User] = User(1,@dialelo)
+	  * res: cats.Id[User] = User(1,@dialelo)
 	  * }}}
 	  * As you can see, when all the data is cached, no query to the data sources is executed since the results are available in the cache.
 	  *
 	  * If only part of the data is cached, the cached data won't be asked for:
 	  *
 	  */
-  def cachePartialHits(res0: List[User]) = {
+  def cachePartialHits(res0: Int) = {
     val fetchManyUsers: Fetch[List[User]] = List(1, 2, 3).traverse(getUser)
-    fetchManyUsers.runA[Id](cache).size should be(res0)
+    fetchManyUsers.runA[Id](cache).size shouldBe res0
   }
 
   /**
@@ -79,11 +78,11 @@ object CachingSection extends FlatSpec with Matchers with Section {
 
     val firstEnv = fetchUsers.runE[Id]
 
-    firstEnv.rounds.size should be(res0)
+    firstEnv.rounds.size shouldBe res0
 
     val secondEnv = fetchUsers.runA[Id](firstEnv.cache)
 
-    secondEnv.size should be(res1)
+    secondEnv.size shouldBe res1
   }
 
   /**
@@ -126,7 +125,7 @@ object CachingSection extends FlatSpec with Matchers with Section {
     } yield {
       (one, another)
     }
-    fetchSameTwice.runA[Id](ForgetfulCache()) should be(res0)
+    fetchSameTwice.runA[Id](ForgetfulCache()) shouldBe res0
   }
 
 }

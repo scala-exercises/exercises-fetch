@@ -21,6 +21,6 @@ class DebuggingSpec extends Spec with Checkers
 	import DebuggingSection._
 	import Test._
 
-	def `Failed Fetch` =
-		check(testSuccess(failedFetch _, true :: HNil))
+	def `Debugging` =
+		check(testSuccess(debugging _, List(1,2):: 3 :: List(1,2,3) :: HNil))
 }

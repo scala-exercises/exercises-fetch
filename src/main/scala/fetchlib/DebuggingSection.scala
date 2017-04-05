@@ -6,85 +6,70 @@
 package fetchlib
 
 import cats.data.NonEmptyList
-import org.scalatest._
+import org.scalatest.{FlatSpec, Matchers, _}
 import fetch._
-
 import cats._
 import fetch.unsafe.implicits._
 import fetch.syntax._
-import scala.util.Try
 
-import org.scalaexercises.definitions._
+import scala.util.Try
+import org.scalaexercises.definitions.Section
 
 /**
- * = cats =
+ * = Debugging =
  *
- * Fetch is built using Cats' Free monad construction and thus works out of the box with
- * cats syntax. Using Cats' syntax, we can make fetch declarations more concise, without
- * the need to use the combinators in the `Fetch` companion object.
+ * We have introduced the handy fetch.debug.describe function for debugging errors, but it can do more than that. It can also give you a detailed description of a fetch execution given an environment.
  *
- * Fetch provides its own instance of `Applicative[Fetch]`. Whenever we use applicative
- * operations on more than one `Fetch`, we know that the fetches are independent meaning
- * we can perform optimizations such as batching and concurrent requests.
+ * Add the following line to your dependencies for including Fetch’s debugging facilities:
+ * {{{
+ * "com.47deg" %% "fetch-debug" % "0.6.0"
+ * }}}
  *
- * If we were to use the default `Applicative[Fetch]` operations, which are implemented in terms of `flatMap`,
- * we wouldn't have information about the independency of multiple fetches.
+ * @param name Debbuging
  *
- * @param name cats
  */
 object DebuggingSection extends FlatSpec with Matchers with Section {
 
-  /**
-	  * = Applicative =
-	  *
-	  * The `|@|` operator (cartesian builder) allows us to combine multiple independent fetches, even when they
-	  * are from different types, and apply a pure function to their results. We can use it
-	  * as a more powerful alternative to the `product` method or `Fetch#join`:
-	  *
-	  * Notice how the queries to posts are batched.
-	  */
-  {
-    import cats.syntax.cartesian._
-
-    val fetchThree: Fetch[(Post, User, Post)] = (getPost(1) |@| getUser(2) |@| getPost(2)).tupled
-
-    fetchThree.runA[Id]
-    // ~~> [46] Many Posts NonEmptyList(1, 2)
-    // <~~ [46] Many Posts NonEmptyList(1, 2)
-    // ~~> [46] One User 2
-    // <~~ [46] One User 2
-    // res54: cats.Id[(Post, User, Post)] = (Post(1,2,An article),User(2,@two),Post(2,3,Another article))
-  }
+  import FetchTutorialHelper._
 
   /**
-	  * More interestingly, we can use it to apply a pure function to the results of various fetches.
+	  * = Fetch execution =
+	  * We are going to create an interesting fetch that applies all the optimizations available (caching, batching and concurrent request) for ilustrating how we can visualize fetch executions using the environment.
+	  * {{{
+	  * val batched: Fetch[List[User]] = Fetch.multiple(1, 2)(UserSource)
+	  * val cached: Fetch[User] = getUser(2)
+	  * val concurrent: Fetch[(List[User], List[Post])] = (List(1, 2, 3).traverse(getUser) |@| List(1, 2, 3).traverse(getPost)).tupled
+	  * *
+	  * val interestingFetch = for {
+	  * users <- batched
+	  * anotherUser <- cached
+	  * _ <- concurrent
+	  * } yield "done"
+	  * }}}
+	  * Now that we have the fetch let’s run it, get the environment and visualize its execution using the describe function:
 	  */
-  {
-    val fetchFriends: Fetch[String] = (getUser(1) |@| getUser(2)).map({ (one, other) =>
-      {
-        s"${one.username} is friends with ${other.username}"
-      }
-    })
-    // fetchFriends: fetch.Fetch[String] = Free(...)
+  def debugging(res0: List[Int], res1: Int, res2: List[Int]) = {
+    import fetch.debug.describe
 
-    fetchFriends.runA[Id]
-    // ~~> [46] Many Users NonEmptyList(1, 2)
-    // <~~ [46] Many Users NonEmptyList(1, 2)
-    // res55: cats.Id[String] = @one is friends with @two
+    val env = interestingFetch.runE[Id]
+
+    println(describe(env))
+
+    // Fetch execution took 0.319514 seconds <- shows the total time that took to run the fetch
+    //
+    //The nested lines represent the different rounds of execution
+
+    //“Fetch many” rounds are executed for getting a batch of identities from one data source
+    /*   [Fetch many] From `User` with ids*/
+    res0 /*took 0.000110 seconds*/
+
+    //“Concurrent” rounds are multiple “one” or “many” rounds for different data sources executed concurrently
+    //   [Concurrent] took 0.000207 seconds
+
+    //“Fetch one” rounds are executed for getting an identity from one data source
+    //     [Fetch one] From `User` with id */
+    res1
+    //     [Fetch many] From `Post` with ids */
+    res2
   }
-
-  /**
-	  * The above example is equivalent to the following using the `Fetch#join` method:
-	  */
-  def similarToJoin(res0: Int) = {
-    val ops =
-      Fetch.join(1.fetch, 2.fetch).map {
-        case (a, b) => {
-          a + b
-        }
-      }
-
-    ops.runA[Id] should be(res0)
-  }
-
 }

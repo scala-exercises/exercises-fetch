@@ -10,6 +10,7 @@ lazy val fetch = (project in file("."))
       dep("exercise-compiler"),
       dep("definitions"),
       %%("fetch"),
+      %%("fetch-debug"),
       %%("fetch-monix"),
       %%("shapeless"),
       %%("scalatest"),

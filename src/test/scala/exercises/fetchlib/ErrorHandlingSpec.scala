@@ -25,6 +25,10 @@ class ErrorHandlingSpec extends Spec with Checkers {
 
   def `Attempt Failed Fetch` =
     check(testSuccess(attemptFailedFetch _, true :: HNil))
+  def `Attempt Failed Fetch` =
+    check(testSuccess(attemptFailedFetch _, true :: HNil))
+  def `Attempt Failed Fetch` =
+    check(testSuccess(attemptFailedFetch _, true :: HNil))
 
   def `Attempt Failed Fetch Syntax` =
     check(testSuccess(attemptFailedFetchSyntax _, true :: HNil))

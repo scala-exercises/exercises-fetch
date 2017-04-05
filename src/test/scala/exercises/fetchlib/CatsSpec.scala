@@ -21,12 +21,9 @@ class CatsSpec extends Spec with Checkers {
   import Test._
 
   def `Cartesian Builder` =
-    check(testSuccess(applicative _, 3 :: HNil))
+    check(testSuccess(applicative _, "@one is friends with @two" :: HNil))
 
-  def `Cartesian Builder` =
-    check(testSuccess(applicative _, 3 :: HNil))
-
-  def `Join ops` =
-    check(testSuccess(similarToJoin _, 3 :: HNil))
+  def `Similar to Join` =
+    check(testSuccess(similarToJoin _, "@one loves @two" :: HNil))
 
 }

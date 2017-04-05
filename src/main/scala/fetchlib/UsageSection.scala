@@ -6,9 +6,8 @@
 package fetchlib
 
 import cats.data.NonEmptyList
-import org.scalatest._
+import org.scalatest.{FlatSpec, Matchers, _}
 import fetch._
-
 import cats._
 import fetch.unsafe.implicits._
 import fetch.syntax._
@@ -19,9 +18,8 @@ import cats.syntax.traverse._
 import scala.concurrent._
 import ExecutionContext.Implicits.global
 import scala.concurrent.duration._
-
 import fetch.implicits._
-import org.scalaexercises.definitions._
+import org.scalaexercises.definitions.Section
 
 /**
  * = Introduction =
@@ -208,7 +206,7 @@ object UsageSection extends FlatSpec with Matchers with Section {
 	  */
   def creatingAndRunning(res0: User) = {
     val fetchUser: Fetch[User] = getUser(1)
-    fetchUser.runA[Id] should be(res0)
+    fetchUser.runA[Id] shouldBe res0
   }
 
   /**
@@ -231,8 +229,8 @@ object UsageSection extends FlatSpec with Matchers with Section {
 
     val (env, result) = fetchTwoUsers.runF[Id]
 
-    result should be(res0)
-    env.rounds.size should be(res1)
+    result shouldBe res0
+    env.rounds.size shouldBe res1
   }
 
   /**
@@ -251,7 +249,7 @@ object UsageSection extends FlatSpec with Matchers with Section {
   def batching(res0: Tuple2[User, User]) = {
     val fetchProduct: Fetch[(User, User)] = getUser(1).product(getUser(2))
     //Note how both ids (1 and 2) are requested in a single query to the data source when executing the fetch.
-    fetchProduct.runA[Id] should be(res0)
+    fetchProduct.runA[Id] shouldBe res0
   }
 
   /**
@@ -264,7 +262,7 @@ object UsageSection extends FlatSpec with Matchers with Section {
   def deduplication(res0: Tuple2[User, User]) = {
     val fetchDuped: Fetch[(User, User)] = getUser(1).product(getUser(1))
 
-    fetchDuped.runA[Id] should be(res0)
+    fetchDuped.runA[Id] shouldBe res0
   }
 
   /**
@@ -294,7 +292,7 @@ object UsageSection extends FlatSpec with Matchers with Section {
       (aUser, anotherUser)
     }
 
-    fetchCached.runA[Id] should be(res0)
+    fetchCached.runA[Id] shouldBe res0
   }
 
   /**
@@ -303,7 +301,7 @@ object UsageSection extends FlatSpec with Matchers with Section {
 	  * Queries are a way of separating the computation required to read a piece of data from the context in
 	  * which is run. Let's look at the various ways we have of constructing queries.
 	  *
-	  * = synchronous =
+	  * = Synchronous =
 	  *
 	  * A query can be synchronous, and we may want to evaluate it when `fetchOne` and `fetchMany`
 	  * are called. We can do so with `Query#sync`:
@@ -314,7 +312,7 @@ object UsageSection extends FlatSpec with Matchers with Section {
 	  * @param name queries
 	  */
   def synchronous(res0: String) =
-    Query.sync({ println("Computing 42"); 42 }) should be(res0)
+    Query.sync({ println("Computing 42"); 42 }) shouldBe res0
 
   /**
 	  * Synchronous queries simply wrap a Cats’ Eval instance, which captures the notion of a lazy synchronous computation. You can lift an Eval[A] into a Query[A] too:
@@ -323,10 +321,10 @@ object UsageSection extends FlatSpec with Matchers with Section {
 	  * }}}
 	  */
   def catsSynchronous(res0: String) =
-    Query.eval(Eval.always({ println("Computing 42"); 42 })) should be(res0)
+    Query.eval(Eval.always({ println("Computing 42"); 42 })) shouldBe res0
 
   /**
-	  * = asynchronous =
+	  * = Asynchronous =
 	  *
 	  * Asynchronous queries are constructed passing a function that accepts a callback (`A => Unit`) and an errback
 	  * (`Throwable => Unit`) and performs the asynchronous computation. Note that you must ensure that either the
@@ -339,8 +337,6 @@ object UsageSection extends FlatSpec with Matchers with Section {
 	  * })
 	  * }
 	  * }}}
-	  */
-  /**
 	  * = Combining data from multiple sources =
 	  *
 	  * Now that we know about some of the optimizations that Fetch can perform to read data efficiently,
@@ -425,7 +421,7 @@ object UsageSection extends FlatSpec with Matchers with Section {
       topic <- getPostTopic(post)
     } yield (post, topic)
 
-    fetchMulti.runA[Id] should be(res0)
+    fetchMulti.runA[Id] shouldBe res0
   }
 
   /**
@@ -441,7 +437,7 @@ object UsageSection extends FlatSpec with Matchers with Section {
   def concurrency(res0: Tuple2[Post, User], res1: Int) = {
     val fetchConcurrent: Fetch[(Post, User)] = getPost(1).product(getUser(2))
 
-    fetchConcurrent.runA[Id] should be(res1)
+    fetchConcurrent.runA[Id] shouldBe res1
 
   }
 
@@ -456,12 +452,8 @@ object UsageSection extends FlatSpec with Matchers with Section {
 	  * {{{
 	  * import fetch.implicits._
 	  * *
-	  *Await.result(fetchConcurrent.runA[Future], Duration.Inf)
-	  * ~~> [47] One Post 1
-	  * ~~> [49] One User 2
-	  * <~~ [47] One Post 1
-	  * <~~ [49] One User 2
-	  * res18: (Post, User) = (Post(1,2,An article),User(2,@two))
+	  * Await.result(fetchConcurrent.runA[Future], Duration.Inf)
+	  * res: (Post, User) = (Post(1,2,An article),User(2,@two))
 	  * }}}
 	  * As you can see, each independent request ran in its own logical thread.
 	  *
@@ -487,7 +479,7 @@ object UsageSection extends FlatSpec with Matchers with Section {
 	  */
   def sequence(res0: List[User]) = {
     val fetchSequence: Fetch[List[User]] = List(getUser(1), getUser(2), getUser(3)).sequence
-    fetchSequence.runA[Id] should be(res0)
+    fetchSequence.runA[Id] shouldBe res0
   }
 
   /**
@@ -500,7 +492,7 @@ object UsageSection extends FlatSpec with Matchers with Section {
 	  */
   def traverse(res0: List[User]) = {
     val fetchTraverse: Fetch[List[User]] = List(1, 2, 3).traverse(getUser)
-    fetchTraverse.runA[Id] should be(res0)
+    fetchTraverse.runA[Id] shouldBe res0
   }
 
 }
