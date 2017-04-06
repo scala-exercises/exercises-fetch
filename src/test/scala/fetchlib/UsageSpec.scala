@@ -3,50 +3,50 @@
  * Copyright (C) 2015-2016 47 Degrees, LLC. <http://www.47deg.com>
  */
 
-package exercises
+package fetchlib
 
-import org.scalaexercises.Test
-import org.scalatest.Spec
+import fetchlib.FetchTutorialHelper.{postDatabase, userDatabase}
+import org.scalaexercises.Test.testSuccess
 import org.scalatest.prop.Checkers
+import org.scalatest.refspec.RefSpec
 import shapeless.HNil
+import org.scalacheck.Shapeless._
 
-class UsageSpec extends Spec with Checkers {
+class UsageSpec extends RefSpec with Checkers {
 
-  import Test._
-  import fetchlib.UsageSection._
-  import fetchlib.FetchTutorialHelper._
+  def `Creating And Running`: Unit =
+    check(testSuccess(UsageSection.creatingAndRunning _, userDatabase(1) :: HNil))
 
-  def `Creating And Running` =
-    check(testSuccess(creatingAndRunning _, userDatabase(1) :: HNil))
+  def `Sequencing Strategy`: Unit =
+    check(testSuccess(UsageSection.sequencing _, (userDatabase(1), userDatabase(2)) :: HNil))
 
-  def `Sequencing Strategy` =
-    check(testSuccess(sequencing _, (userDatabase(1), userDatabase(2)) :: HNil))
+  def `Batching Strategy`: Unit =
+    check(testSuccess(UsageSection.batching _, (userDatabase(1), userDatabase(2)) :: HNil))
 
-  def `Batching Strategy` =
-    check(testSuccess(batching _, (userDatabase(1), userDatabase(2)) :: HNil))
+  def `Deduplication Strategy`: Unit =
+    check(testSuccess(UsageSection.deduplication _, (userDatabase(1), userDatabase(1)) :: HNil))
 
-  def `Deduplication Strategy` =
-    check(testSuccess(deduplication _, (userDatabase(1), userDatabase(1)) :: HNil))
+  def `Caching Strategy`: Unit =
+    check(testSuccess(UsageSection.caching _, (userDatabase(1), userDatabase(1)) :: HNil))
 
-  def `Caching Strategy` =
-    check(testSuccess(caching _, (userDatabase(1), userDatabase(1)) :: HNil))
+  def `Combining Data`: Unit =
+    check(testSuccess(UsageSection.combiningData _, (postDatabase(1), "applicative") :: HNil))
 
-  def `Sync Queries` =
-    check(testSuccess(synchronous _, "Computing 42" :: HNil))
+  def `Combining Concurrency`: Unit =
+    check(testSuccess(UsageSection.concurrency _, (postDatabase(1), userDatabase(2)) :: HNil))
 
-  def `Cats Sync Queries` =
-    check(testSuccess(catsSynchronous _, "Computing 42" :: HNil))
+  def `Combinators sequence`: Unit = {
+    check(
+      testSuccess(
+        UsageSection.sequence _,
+        List(userDatabase(1), userDatabase(2), userDatabase(3)) :: HNil))
+  }
 
-  def `Combining Data` =
-    check(testSuccess(combiningData _, (postDatabase(1), "applicative") :: HNil))
-
-  def `Combining Concurrency` =
-    check(testSuccess(concurrency _, (postDatabase(1), userDatabase(2)) :: HNil))
-
-  def `Combinators sequence` =
-    check(testSuccess(sequence _, List(userDatabase(1), userDatabase(2), userDatabase(3)) :: HNil))
-
-  def `Combinators traverse` =
-    check(testSuccess(traverse _, List(userDatabase(1), userDatabase(2), userDatabase(3)) :: HNil))
+  def `Combinators traverse`: Unit = {
+    check(
+      testSuccess(
+        UsageSection.traverse _,
+        List(userDatabase(1), userDatabase(2), userDatabase(3)) :: HNil))
+  }
 
 }

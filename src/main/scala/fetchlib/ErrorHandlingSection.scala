@@ -54,13 +54,13 @@ object ErrorHandlingSection extends FlatSpec with Matchers with Section {
 	  * }}}
 	  * Now we can convert Eval[User] into Eval[Either[FetchException, User] and capture exceptions as values in the left of the disjunction.
 	  */
-  def catsEval(res0: Left[FetchException, User]) = {
+  def catsEval(res0: String) = {
     import cats.Eval
 
     val safeResult: Eval[Either[FetchException, User]] =
       FetchMonadError[Eval].attempt(fetchException.runA[Eval])
 
-    safeResult.value shouldBe res0
+    safeResult.value.toString shouldBe res0
   }
 
   /**
@@ -87,13 +87,13 @@ object ErrorHandlingSection extends FlatSpec with Matchers with Section {
 	  * }}}
 	  * Now let’s use the fetch.debug.describe function for describing the error if we find one:
 	  */
-  def debugDescribe(res0: Left[FetchException, User]) = {
+  def debugDescribe(res0: String) = {
     import fetch.debug.describe
 
     val value: Either[FetchException, String] = result.value
-    value shouldBe res0
+    value.toString shouldBe res0
 
-    println(value.fold(describe, identity _))
+    println(value.fold(describe, identity))
     // [Error] Unhandled `java.lang.Exception`: 'Oh noes', fetch interrupted after 2 rounds
     // Fetch execution took 0.203559 seconds
     //
@@ -113,7 +113,7 @@ object ErrorHandlingSection extends FlatSpec with Matchers with Section {
 	  *
 	  * When a single identity is being fetched the request will be a FetchOne; it contains the data source and the identity to fetch so you should be able to easily diagnose the failure. For ilustrating this scenario we’ll ask for users that are not in the database.
 	  */
-  def oneRequest(res0: Left[FetchException, User]) = {
+  def oneRequest(res0: String) = {
     import fetch.debug.describe
 
     val missingUser = getUser(5)
@@ -123,7 +123,7 @@ object ErrorHandlingSection extends FlatSpec with Matchers with Section {
     //And now we can execute the fetch and describe its execution:
 
     val value: Either[FetchException, User] = result.value
-    value shouldBe res0
+    value.toString shouldBe res0
     println(value.fold(describe, _.toString))
 
     // [Error] Identity not found: 5 in `User`, fetch interrupted after 0 rounds
@@ -173,11 +173,10 @@ object ErrorHandlingSection extends FlatSpec with Matchers with Section {
     val value: Either[FetchException, List[User]]        = result.value
 
     value match {
-      case Left(mi @ MissingIdentities(_, _)) => {
+      case Left(mi @ MissingIdentities(_, _)) =>
         println("Missing identities " + mi.missing) shouldBe res0
         println("Environment " + mi.env) shouldBe res1
-      }
-      case _ => {}
+      case _ =>
     }
 
   }

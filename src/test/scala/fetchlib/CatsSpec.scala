@@ -3,22 +3,20 @@
  * Copyright (C) 2015-2016 47 Degrees, LLC. <http://www.47deg.com>
  */
 
-package exercises
+package fetchlib
 
-import org.scalaexercises.Test
-import org.scalatest.Spec
+import org.scalaexercises.Test.testSuccess
 import org.scalatest.prop.Checkers
+import org.scalatest.refspec.RefSpec
 import shapeless.HNil
+import org.scalacheck.Shapeless._
 
-class CatsSpec extends Spec with Checkers {
+class CatsSpec extends RefSpec with Checkers {
 
-  import Test._
-  import fetchlib.CatsSection._
+  def `Cartesian Builder`: Unit =
+    check(testSuccess(CatsSection.applicative _, "@one is friends with @two" :: HNil))
 
-  def `Cartesian Builder` =
-    check(testSuccess(applicative _, "@one is friends with @two" :: HNil))
-
-  def `Similar to Join` =
-    check(testSuccess(similarToJoin _, "@one loves @two" :: HNil))
+  def `Similar to Join`: Unit =
+    check(testSuccess(CatsSection.similarToJoin _, "@one loves @two" :: HNil))
 
 }

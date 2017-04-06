@@ -3,31 +3,29 @@
  * Copyright (C) 2015-2016 47 Degrees, LLC. <http://www.47deg.com>
  */
 
-package exercises
+package fetchlib
 
-import org.scalaexercises.Test
-import org.scalatest.Spec
+import org.scalaexercises.Test.testSuccess
 import org.scalatest.prop.Checkers
+import org.scalatest.refspec.RefSpec
 import shapeless.HNil
+import org.scalacheck.Shapeless._
+class ErrorHandlingSpec extends RefSpec with Checkers {
 
-class ErrorHandlingSpec extends Spec with Checkers {
+  def `Exception`: Unit =
+    check(testSuccess(ErrorHandlingSection.catsEval _, "Left(fetch.UnhandledException)" :: HNil))
 
-  import Test._
-  import fetchlib.ErrorHandlingSection._
+  def `Debug`: Unit =
+    check(
+      testSuccess(ErrorHandlingSection.debugDescribe _, "Left(fetch.UnhandledException)" :: HNil))
 
-  def `Exception` =
-    check(testSuccess(catsEval _, Left(fetch.UnhandledException) :: HNil))
+  def `One Request`: Unit =
+    check(testSuccess(ErrorHandlingSection.oneRequest _, "Left(fetch.NotFound)" :: HNil))
 
-  def `Debug` =
-    check(testSuccess(debugDescribe _, Left(fetch.UnhandledException) :: HNil))
-
-  def `One Request` =
-    check(testSuccess(oneRequest _, Left(fetch.NotFound) :: HNil))
-
-  def `Missing` =
+  def `Missing`: Unit =
     check(
       testSuccess(
-        missing _,
+        ErrorHandlingSection.missing _,
         "Missing identities Map(User -> List(5, 6))" :: "Environment FetchEnv(InMemoryCache(Map()),Queue())" :: HNil))
 
 }

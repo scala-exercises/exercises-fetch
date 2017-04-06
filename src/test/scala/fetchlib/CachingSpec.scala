@@ -3,28 +3,26 @@
  * Copyright (C) 2015-2016 47 Degrees, LLC. <http://www.47deg.com>
  */
 
-package exercises
+package fetchlib
 
-import org.scalaexercises.Test
-import org.scalatest.Spec
+import org.scalaexercises.Test.testSuccess
 import org.scalatest.prop.Checkers
+import org.scalatest.refspec.RefSpec
 import shapeless.HNil
+import org.scalacheck.Shapeless._
+import fetchlib.FetchTutorialHelper.userDatabase
 
-class CachingSpec extends Spec with Checkers {
+class CachingSpec extends RefSpec with Checkers {
 
-  import Test._
-  import fetchlib.CachingSection._
-  import fetchlib.FetchTutorialHelper._
+  def `Cache Prepopulating`: Unit =
+    check(testSuccess(CachingSection.prepopulating _, userDatabase(1) :: HNil))
 
-  def `Cache Prepopulating` =
-    check(testSuccess(prepopulating _, User(1, "@dialelo") :: HNil))
+  def `Cache Partial Hits`: Unit =
+    check(testSuccess(CachingSection.cachePartialHits _, 3 :: HNil))
 
-  def `Cache Partial Hits` =
-    check(testSuccess(cachePartialHits _, 3 :: HNil))
+  def `Cache Replay`: Unit =
+    check(testSuccess(CachingSection.replaying _, 1 :: 3 :: HNil))
 
-  def `Cache Replay` =
-    check(testSuccess(replaying _, 1 :: 0 :: HNil))
-
-  def `Cache Custom` =
-    check(testSuccess(customCache _, (User(1, "@one"), User(1, "@one")) :: HNil))
+  def `Cache Custom`: Unit =
+    check(testSuccess(CachingSection.customCache _, (userDatabase(1), userDatabase(1)) :: HNil))
 }

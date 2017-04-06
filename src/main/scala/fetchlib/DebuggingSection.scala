@@ -5,9 +5,15 @@
 
 package fetchlib
 
-import cats._
+import cats.Id
+import cats.instances.list._
+import cats.syntax.cartesian._
+import cats.syntax.traverse._
+import fetch._
+import fetch.monixTask.implicits._
 import fetch.syntax._
 import fetch.unsafe.implicits._
+import fetchlib.FetchTutorialHelper.{getPost, getUser, Post, User, UserSource}
 import org.scalaexercises.definitions.Section
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -26,27 +32,24 @@ import org.scalatest.{FlatSpec, Matchers}
  */
 object DebuggingSection extends FlatSpec with Matchers with Section {
 
-  import FetchTutorialHelper._
-
   /**
 	  * = Fetch execution =
 	  * We are going to create an interesting fetch that applies all the optimizations available (caching, batching and concurrent request) for ilustrating how we can visualize fetch executions using the environment.
-	  * {{{
-	  * val batched: Fetch[List[User]] = Fetch.multiple(1, 2)(UserSource)
-	  * val cached: Fetch[User] = getUser(2)
-	  * val concurrent: Fetch[(List[User], List[Post])] = (List(1, 2, 3).traverse(getUser) |@| List(1, 2, 3).traverse(getPost)).tupled
-	  * *
-	  * val interestingFetch = for {
-	  * users <- batched
-	  * anotherUser <- cached
-	  * _ <- concurrent
-	  * } yield "done"
-	  * }}}
+	*
 	  * Now that we have the fetch let’s run it, get the environment and visualize its execution using the describe function:
 	  */
-  def debugging(res0: List[Int], res1: Int, res2: List[Int]) = {
+  def debugging(res0: Int, res1: Int, res2: Int) = {
     import fetch.debug.describe
+    val batched: Fetch[List[User]] = Fetch.multiple(res0, res1)(UserSource)
+    val cached: Fetch[User]        = getUser(res2)
+    val concurrent: Fetch[(List[User], List[Post])] =
+      (List(1, 2, 3).traverse(getUser) |@| List(1, 2, 3).traverse(getPost)).tupled
 
+    val interestingFetch = for {
+      users       <- batched
+      anotherUser <- cached
+      _           <- concurrent
+    } yield "done"
     val env = interestingFetch.runE[Id]
 
     println(describe(env))
@@ -56,16 +59,13 @@ object DebuggingSection extends FlatSpec with Matchers with Section {
     //The nested lines represent the different rounds of execution
 
     //“Fetch many” rounds are executed for getting a batch of identities from one data source
-    /*   [Fetch many] From `User` with ids*/
-    res0 /*took 0.000110 seconds*/
+    //   [Fetch many] From `User` with ids List(1, 2) took 0.000110 seconds
 
     //“Concurrent” rounds are multiple “one” or “many” rounds for different data sources executed concurrently
     //   [Concurrent] took 0.000207 seconds
 
     //“Fetch one” rounds are executed for getting an identity from one data source
-    //     [Fetch one] From `User` with id */
-    res1
-    //     [Fetch many] From `Post` with ids */
-    res2
+    //     [Fetch one] From `User` with id 3
+    //     [Fetch many] From `Post` with ids List(1, 2, 3)
   }
 }

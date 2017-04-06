@@ -70,9 +70,8 @@ object CatsSection extends FlatSpec with Matchers with Section {
     val fetchLoves: Fetch[String] = Fetch
       .join(getUser(1), getUser(2))
       .map({
-        case (one, other) => {
+        case (one, other) =>
           s"${one.username} loves ${other.username}"
-        }
       })
 
     fetchLoves.runA[Id] shouldBe res0

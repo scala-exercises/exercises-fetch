@@ -55,7 +55,7 @@ object SyntaxSection extends FlatSpec with Matchers with Section {
 	  *
 	  * We can compose two independent fetches with `fetch1.join(fetch2)`.
 	  */
-  def join(res0: Tuple2[Post, User]) = {
+  def join(res0: (Post, User)) = {
     val fetchJoined: Fetch[(Post, User)] = getPost(1).join(getUser(2))
     fetchJoined.runA[Id] shouldBe res0
   }
@@ -129,7 +129,7 @@ object SyntaxSection extends FlatSpec with Matchers with Section {
 	  *
 	  * If the fetches are to the same data source they will be batched; if they aren’t, they will be evaluated at the same time.
 	  */
-  def companionJoin(res0: Tuple2[Post, User]) = {
+  def companionJoin(res0: (Post, User)) = {
     val fetchJoined: Fetch[(Post, User)] = Fetch.join(getPost(1), getUser(2))
 
     Fetch.run[Id](fetchJoined) shouldBe res0

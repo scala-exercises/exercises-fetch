@@ -60,7 +60,7 @@ object ConcurrencyMonadsSection extends FlatSpec with Matchers with Section {
 	  * For the sake of the examples we'll use the global `ExecutionContext`.
 	  *
 	  */
-  def stdFutures(res0: Tuple2[Int, Int]) = {
+  def stdFutures(res0: (Int, Int)) = {
     import fetch.implicits._
 
     import scala.concurrent.ExecutionContext.Implicits.global
@@ -68,9 +68,8 @@ object ConcurrencyMonadsSection extends FlatSpec with Matchers with Section {
     import scala.concurrent.{Await, Future}
 
     val op = homePage.runA[Future] map {
-      case (posts, topics) => {
+      case (posts, topics) =>
         (posts.size, topics.size)
-      }
     }
 
     val result = Await.result(op, Duration.Inf)
@@ -100,15 +99,13 @@ object ConcurrencyMonadsSection extends FlatSpec with Matchers with Section {
 	  * Note that running a fetch to a `Task` doesn't trigger execution. We can interpret a task to a `Future` with the `Task#runAsync` method. We'll use the global scheduler for now.
 	  *
 	  */
-  def monixTask(res0: Tuple2[Int, Int]) = {
+  def monixTask(res0: (Int, Int)) = {
 
     val scheduler = Scheduler.Implicits.global
-    val task      = Fetch.run[Task](homePage)
 
     val op = homePage.runA[Task] map {
-      case (posts, topics) => {
+      case (posts, topics) =>
         (posts.size, topics.size)
-      }
     }
 
     val result = Await.result(op.runAsync(scheduler), Duration.Inf)
@@ -193,7 +190,7 @@ object ConcurrencyMonadsSection extends FlatSpec with Matchers with Section {
 	  * Because of this we'll override `map` for not using `flatMap` and `product` for expressing the independence of two computations.
 	  * We make use of the `FromMonadError` class below, making it easer to implement `FetchMonadError[Task]` given a `MonadError[Task, Throwable]` which we can get from the monix-cats projects.
 	  */
-  def customTypes(res0: Tuple2[Int, Int]) = {
+  def customTypes(res0: (Int, Int)) = {
     import monix.cats._
 
     implicit val taskFetchMonadError: FetchMonadError[Task] =
@@ -210,12 +207,11 @@ object ConcurrencyMonadsSection extends FlatSpec with Matchers with Section {
     val scheduler = Scheduler.Implicits.global
 
     val op = homePage.runA[Task](taskFetchMonadError) map {
-      case (posts, topics) => {
+      case (posts, topics) =>
         (posts.size, topics.size)
-      }
     }
 
-    val result = Await.result(op.runAsync(scheduler), 5 seconds)
+    val result = Await.result(op.runAsync(scheduler), Duration.Inf)
 
     result shouldBe res0
 

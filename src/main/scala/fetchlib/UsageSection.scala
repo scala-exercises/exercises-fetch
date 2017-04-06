@@ -213,7 +213,7 @@ object UsageSection extends FlatSpec with Matchers with Section {
 	  * so it isn't able to make any optimizations. When running the below fetch, we will query the user data source
 	  * in two rounds: one for the user with id 1 and another for the user with id 2.
 	  */
-  def sequencing(res0: Tuple2[User, User], res1: Int) = {
+  def sequencing(res0: (User, User)) = {
     val fetchTwoUsers: Fetch[(User, User)] = for {
       aUser       <- getUser(1)
       anotherUser <- getUser(aUser.id + 1)
@@ -224,7 +224,6 @@ object UsageSection extends FlatSpec with Matchers with Section {
     val (env, result) = fetchTwoUsers.runF[Id]
 
     result shouldBe res0
-    env.rounds.size shouldBe res1
   }
 
   /**
@@ -240,7 +239,7 @@ object UsageSection extends FlatSpec with Matchers with Section {
 	  * import cats.syntax.cartesian._
 	  * }}}
 	  */
-  def batching(res0: Tuple2[User, User]) = {
+  def batching(res0: (User, User)) = {
     val fetchProduct: Fetch[(User, User)] = getUser(1).product(getUser(2))
     //Note how both ids (1 and 2) are requested in a single query to the data source when executing the fetch.
     fetchProduct.runA[Id] shouldBe res0
@@ -253,7 +252,7 @@ object UsageSection extends FlatSpec with Matchers with Section {
 	  * Note that when running the fetch, the identity 1 is only requested once even when it is needed by both fetches.
 	  *
 	  */
-  def deduplication(res0: Tuple2[User, User]) = {
+  def deduplication(res0: (User, User)) = {
     val fetchDuped: Fetch[(User, User)] = getUser(1).product(getUser(1))
 
     fetchDuped.runA[Id] shouldBe res0
@@ -278,7 +277,7 @@ object UsageSection extends FlatSpec with Matchers with Section {
 	  * time it was needed we used the cached versions, thus avoiding another request to the user data
 	  * source.
 	  */
-  def caching(res0: Tuple2[User, User]) = {
+  def caching(res0: (User, User)) = {
     val fetchCached: Fetch[(User, User)] = for {
       aUser       <- getUser(1)
       anotherUser <- getUser(1)
@@ -304,20 +303,15 @@ object UsageSection extends FlatSpec with Matchers with Section {
 	  * }}}
 	  *
 	  *
-	  */
-  def synchronous(res0: String) =
-    Query.sync({ println("Computing 42"); 42 }) shouldBe res0
-
-  /**
+	  * {{{
+	  *Query.sync({ println("Computing 42"); 42 })
+	  * }}}
 	  * Synchronous queries simply wrap a Cats’ Eval instance, which captures the notion of a lazy synchronous computation. You can lift an Eval[A] into a Query[A] too:
 	  * {{{
 	  * import cats.Eval
+	  *Query.eval(Eval.always({ println("Computing 42"); 42 }))
 	  * }}}
-	  */
-  def catsSynchronous(res0: String) =
-    Query.eval(Eval.always({ println("Computing 42"); 42 })) shouldBe res0
-
-  /**
+	  *
 	  * = Asynchronous =
 	  *
 	  * Asynchronous queries are constructed passing a function that accepts a callback (`A => Unit`) and an errback
@@ -409,11 +403,13 @@ object UsageSection extends FlatSpec with Matchers with Section {
 	  * of data very easy.
 	  *
 	  */
-  def combiningData(res0: Tuple2[Post, PostTopic]) = {
+  def combiningData(res0: (Post, PostTopic)) = {
     val fetchMulti: Fetch[(Post, PostTopic)] = for {
       post  <- getPost(1)
       topic <- getPostTopic(post)
-    } yield (post, topic)
+    } yield {
+      (post, topic)
+    }
 
     fetchMulti.runA[Id] shouldBe res0
   }
@@ -428,10 +424,10 @@ object UsageSection extends FlatSpec with Matchers with Section {
 	  *
 	  * The below example combines data from two different sources, and the library knows they are independent.
 	  */
-  def concurrency(res0: Tuple2[Post, User], res1: Int) = {
+  def concurrency(res0: (Post, User)) = {
     val fetchConcurrent: Fetch[(Post, User)] = getPost(1).product(getUser(2))
 
-    fetchConcurrent.runA[Id] shouldBe res1
+    fetchConcurrent.runA[Id] shouldBe res0
 
   }
 

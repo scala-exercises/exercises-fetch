@@ -38,7 +38,7 @@ object CachingSection extends FlatSpec with Matchers with Section {
 	  */
   def prepopulating(res0: User) = {
     val fetchUser: Fetch[User] = getUser(1)
-    val cache                  = InMemoryCache(UserSource.identity(1) -> User(1, "@dialelo"))
+    val cache                  = InMemoryCache(UserSource.identity(1) -> User(1, "@one"))
     Fetch.run[Id](fetchUser, cache) shouldBe res0
   }
 
@@ -114,7 +114,7 @@ object CachingSection extends FlatSpec with Matchers with Section {
 	  *
 	  * We can now use our implementation of the cache when running a fetch.
 	  */
-  def customCache(res0: Tuple2[User, User]) = {
+  def customCache(res0: (User, User)) = {
 
     val fetchSameTwice: Fetch[(User, User)] = for {
       one     <- getUser(1)

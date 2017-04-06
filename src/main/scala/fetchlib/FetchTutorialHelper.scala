@@ -39,7 +39,7 @@ object FetchTutorialHelper {
     3 -> User(3, "@three"),
     4 -> User(4, "@four")
   )
-  val fetchException: Fetch[User] = (new Exception("Oh noes")).fetch
+  val fetchException: Fetch[User] = new Exception("Oh noes").fetch
 
   implicit object UserSource extends DataSource[UserId, User] {
     override def name = "User"
@@ -132,9 +132,8 @@ object FetchTutorialHelper {
     authors <- posts.traverse(getAuthor)
     ordered = (posts zip authors)
       .sortBy({
-        case (_, author) => {
+        case (_, author) =>
           author.username
-        }
       })
       .map(_._1)
   } yield {
@@ -157,14 +156,13 @@ object FetchTutorialHelper {
     override def update[A](k: DataSourceIdentity, v: A): ForgetfulCache = this
   }
 
-  val fetchError: Fetch[User] = (new Exception("Oh noes")).fetch
+  val fetchError: Fetch[User] = new Exception("Oh noes").fetch
 
   def queryToTask[A](q: Query[A]): Task[A] = {
     q match {
-      case Sync(e) => {
+      case Sync(e) =>
         evalToTask(e)
-      }
-      case Async(action, timeout) => {
+      case Async(action, timeout) =>
         val task: Task[A] = Task.create((scheduler, callback) => {
           scheduler.execute(new Runnable {
             def run() = action(callback.onSuccess, callback.onError)
@@ -174,23 +172,18 @@ object FetchTutorialHelper {
         })
 
         timeout match {
-          case finite: FiniteDuration => {
+          case finite: FiniteDuration =>
             task.timeout(finite)
-          }
-          case _ => {
+          case _ =>
             task
-          }
         }
-      }
-      case Ap(qf, qx) => {
+      case Ap(qf, qx) =>
         Task
           .zip2(queryToTask(qf), queryToTask(qx))
           .map({
-            case (f, x) => {
+            case (f, x) =>
               f(x)
-            }
           })
-      }
     }
   }
 
@@ -232,20 +225,10 @@ object FetchTutorialHelper {
   val failingFetch: Fetch[String] = for {
     a <- getUser(1)
     b <- getUser(2)
-    c <- fetchException
+    _ <- fetchException
   } yield s"${a.username} loves ${b.username}"
 
   val result: Eval[Either[FetchException, String]] =
     FetchMonadError[Eval].attempt(failingFetch.runA[Eval])
-  val batched: Fetch[List[User]] = Fetch.multiple(1, 2)(UserSource)
-  val cached: Fetch[User]        = getUser(2)
-  val concurrent: Fetch[(List[User], List[Post])] =
-    (List(1, 2, 3).traverse(getUser) |@| List(1, 2, 3).traverse(getPost)).tupled
-
-  val interestingFetch = for {
-    users       <- batched
-    anotherUser <- cached
-    _           <- concurrent
-  } yield "done"
 
 }
