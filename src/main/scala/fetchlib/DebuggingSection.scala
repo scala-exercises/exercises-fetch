@@ -33,11 +33,11 @@ import org.scalatest.{FlatSpec, Matchers}
 object DebuggingSection extends FlatSpec with Matchers with Section {
 
   /**
-	  * = Fetch execution =
-	  * We are going to create an interesting fetch that applies all the optimizations available (caching, batching and concurrent request) for ilustrating how we can visualize fetch executions using the environment.
-	  *
-	  * Now that we have the fetch let’s run it, get the environment and visualize its execution using the `describe` function:
-	  */
+   * = Fetch execution =
+   * We are going to create an interesting fetch that applies all the optimizations available (caching, batching and concurrent request) for ilustrating how we can visualize fetch executions using the environment.
+   *
+   * Now that we have the fetch let’s run it, get the environment and visualize its execution using the `describe` function:
+   */
   def debugging(res0: Int, res1: Int, res2: Int) = {
     import fetch.debug.describe
     val batched: Fetch[List[User]] = Fetch.multiple(res0, res1)(UserSource)

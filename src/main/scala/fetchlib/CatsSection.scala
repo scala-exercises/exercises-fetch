@@ -34,25 +34,25 @@ object CatsSection extends FlatSpec with Matchers with Section {
   import FetchTutorialHelper._
 
   /**
-	  * = Applicative =
-	  *
-	  * The `|@|` operator (cartesian builder) allows us to combine multiple independent fetches, even when they
-	  * are from different types, and apply a pure function to their results. We can use it
-	  * as a more powerful alternative to the `product` method or `Fetch#join`:
-	  *
-	  * Notice how the queries to posts are batched.
-	  *
-	  * {{{
-	  * 	import cats.syntax.cartesian._
-	  *
-	  * 	val fetchThree: Fetch[(Post, User, Post)] = (getPost(1) |@| getUser(2) |@| getPost(2)).tupled
-	  *
-	  *  	fetchThree.runA[Id]
-	  * 	// res: (Post(1,2,An article),User(2,@two),Post(2,3,Another article))
-	  * }}}
-	  *
-	  * More interestingly, we can use it to apply a pure function to the results of various fetches.
-	  */
+   * = Applicative =
+   *
+   * The `|@|` operator (cartesian builder) allows us to combine multiple independent fetches, even when they
+   * are from different types, and apply a pure function to their results. We can use it
+   * as a more powerful alternative to the `product` method or `Fetch#join`:
+   *
+   * Notice how the queries to posts are batched.
+   *
+   * {{{
+   *   import cats.syntax.cartesian._
+   *
+   *   val fetchThree: Fetch[(Post, User, Post)] = (getPost(1) |@| getUser(2) |@| getPost(2)).tupled
+   *
+   *    fetchThree.runA[Id]
+   *   // res: (Post(1,2,An article),User(2,@two),Post(2,3,Another article))
+   * }}}
+   *
+   * More interestingly, we can use it to apply a pure function to the results of various fetches.
+   */
   def applicative(res0: String) = {
     val fetchFriends: Fetch[String] = (getUser(1) |@| getUser(2)).map({ (one, other) =>
       {
@@ -64,8 +64,8 @@ object CatsSection extends FlatSpec with Matchers with Section {
   }
 
   /**
-	  * The above example is equivalent to the following using the `Fetch#join` method:
-	  */
+   * The above example is equivalent to the following using the `Fetch#join` method:
+   */
   def similarToJoin(res0: String) = {
     val fetchLoves: Fetch[String] = Fetch
       .join(getUser(1), getUser(2))
