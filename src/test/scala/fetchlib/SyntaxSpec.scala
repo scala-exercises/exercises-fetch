@@ -5,17 +5,17 @@
 
 package fetchlib
 
+import org.scalacheck.Shapeless._
 import org.scalaexercises.Test
 import org.scalatest.prop.Checkers
 import org.scalatest.refspec.RefSpec
 import shapeless.HNil
-import org.scalacheck.Shapeless._
 
 class SyntaxSpec extends RefSpec with Checkers {
 
   import Test._
-  import fetchlib.SyntaxSection._
   import fetchlib.FetchTutorialHelper._
+  import fetchlib.SyntaxSection._
 
   def `Implicit Syntax`: Unit =
     check(testSuccess(implicitSyntax _, 42 :: HNil))
@@ -38,16 +38,18 @@ class SyntaxSpec extends RefSpec with Checkers {
   def `Join Syntax`: Unit =
     check(testSuccess(companionJoin _, (Post(1, 2, "An article"), User(2, "@two")) :: HNil))
 
-  def `Sequence Syntax`: Unit =
+  def `Sequence Syntax`: Unit = {
     check(
       testSuccess(
         companionSequence _,
         List(User(1, "@one"), User(2, "@two"), User(3, "@three")) :: HNil))
+  }
 
-  def `Traverse Syntax`: Unit =
+  def `Traverse Syntax`: Unit = {
     check(
       testSuccess(
         companionTraverse _,
         List(User(1, "@one"), User(2, "@two"), User(3, "@three")) :: HNil))
+  }
 
 }

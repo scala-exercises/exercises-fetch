@@ -132,8 +132,9 @@ object FetchTutorialHelper {
     authors <- posts.traverse(getAuthor)
     ordered = (posts zip authors)
       .sortBy({
-        case (_, author) =>
+        case (_, author) => {
           author.username
+        }
       })
       .map(_._1)
   } yield {
@@ -160,9 +161,10 @@ object FetchTutorialHelper {
 
   def queryToTask[A](q: Query[A]): Task[A] = {
     q match {
-      case Sync(e) =>
+      case Sync(e) => {
         evalToTask(e)
-      case Async(action, timeout) =>
+      }
+      case Async(action, timeout) => {
         val task: Task[A] = Task.create((scheduler, callback) => {
           scheduler.execute(new Runnable {
             def run() = action(callback.onSuccess, callback.onError)
@@ -172,18 +174,23 @@ object FetchTutorialHelper {
         })
 
         timeout match {
-          case finite: FiniteDuration =>
+          case finite: FiniteDuration => {
             task.timeout(finite)
-          case _ =>
+          }
+          case _ => {
             task
+          }
         }
-      case Ap(qf, qx) =>
+      }
+      case Ap(qf, qx) => {
         Task
           .zip2(queryToTask(qf), queryToTask(qx))
           .map({
-            case (f, x) =>
+            case (f, x) => {
               f(x)
+            }
           })
+      }
     }
   }
 

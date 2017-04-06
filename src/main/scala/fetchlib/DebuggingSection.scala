@@ -20,7 +20,7 @@ import org.scalatest.{FlatSpec, Matchers}
 /**
  * = Debugging =
  *
- * We have introduced the handy fetch.debug.describe function for debugging errors, but it can do more than that. It can also give you a detailed description of a fetch execution given an environment.
+ * We have introduced the handy `fetch.debug.describe` function for debugging errors, but it can do more than that. It can also give you a detailed description of a fetch execution given an environment.
  *
  * Add the following line to your dependencies for including Fetch’s debugging facilities:
  * {{{
@@ -35,8 +35,8 @@ object DebuggingSection extends FlatSpec with Matchers with Section {
   /**
 	  * = Fetch execution =
 	  * We are going to create an interesting fetch that applies all the optimizations available (caching, batching and concurrent request) for ilustrating how we can visualize fetch executions using the environment.
-	*
-	  * Now that we have the fetch let’s run it, get the environment and visualize its execution using the describe function:
+	  *
+	  * Now that we have the fetch let’s run it, get the environment and visualize its execution using the `describe` function:
 	  */
   def debugging(res0: Int, res1: Int, res2: Int) = {
     import fetch.debug.describe
@@ -49,7 +49,9 @@ object DebuggingSection extends FlatSpec with Matchers with Section {
       users       <- batched
       anotherUser <- cached
       _           <- concurrent
-    } yield "done"
+    } yield {
+      "done"
+    }
     val env = interestingFetch.runE[Id]
 
     println(describe(env))

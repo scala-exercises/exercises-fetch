@@ -37,6 +37,16 @@ import org.scalatest.{FlatSpec, Matchers}
  * we may end up trading clarity for performance. Furthermore, we are
  * mixing low-level (optimization) and high-level (business logic with the data
  * we read) concerns.
+ * = Installation =
+ *To begin, add the following dependency to your SBT build file:
+ *{{{
+ *"com.47deg" %% "fetch" % "0.6.0"
+ *}}}
+ *Or, if using Scala.js:
+ *{{{
+ *"com.47deg" %%% "fetch" % "0.6.0"
+ *}}}
+ *Now you’ll have Fetch available in both Scala and Scala.js.
  *
  * = Usage =
  *
@@ -128,7 +138,7 @@ import org.scalatest.{FlatSpec, Matchers}
  * }}}
  * = Data sources that don’t support batching =
  *
- * If your data source doesn’t support batching, you can use the DataSource#batchingNotSupported method as the implementation of fetchMany. Note that it will use the fetchOne implementation for requesting identities one at a time.
+ * If your data source doesn’t support batching, you can use the `DataSource#batchingNotSupported` method as the implementation of `fetchMany`. Note that it will use the `fetchOne` implementation for requesting identities one at a time.
  * {{{
  * implicit object UnbatchedSource extends DataSource[Int, Int]{
  * override def name = "Unbatched"
@@ -143,7 +153,7 @@ import org.scalatest.{FlatSpec, Matchers}
  * }}}
  * = Data sources that only support batching =
  *
- * If your data source only supports querying it in batches, you can implement fetchOne in terms of fetchMany using DataSource#batchingOnly.
+ * If your data source only supports querying it in batches, you can implement `fetchOne` in terms of `fetchMany` using `DataSource#batchingOnly`.
  * {{{
  * implicit object OnlyBatchedSource extends DataSource[Int, Int]{
  * override def name = "OnlyBatched"
@@ -188,7 +198,7 @@ object UsageSection extends FlatSpec with Matchers with Section {
 	  *
 	  * Note that running a fetch to non-concurrency monads like `Id` or `Eval` is not supported in Scala.js.
 	  * In real-life scenarios you'll want to run your fetches to `Future` or a `Task` type provided by a library like
-	  * [Monix](https://monix.io/) or [fs2](https://github.com/functional-streams-for-scala/fs2), both of which are supported
+	  * [[https://monix.io/ Monix]] or [[https://github.com/functional-streams-for-scala/fs2 fs2]], both of which are supported
 	  * in Fetch.
 	  *
 	  * We can now run the fetch and see its result:
@@ -306,7 +316,7 @@ object UsageSection extends FlatSpec with Matchers with Section {
 	  * {{{
 	  *Query.sync({ println("Computing 42"); 42 })
 	  * }}}
-	  * Synchronous queries simply wrap a Cats’ Eval instance, which captures the notion of a lazy synchronous computation. You can lift an Eval[A] into a Query[A] too:
+	  * Synchronous queries simply wrap a Cats’ `Eval` instance, which captures the notion of a lazy synchronous computation. You can lift an `Eval[A]` into a `Query[A]` too:
 	  * {{{
 	  * import cats.Eval
 	  *Query.eval(Eval.always({ println("Computing 42"); 42 }))
@@ -432,13 +442,13 @@ object UsageSection extends FlatSpec with Matchers with Section {
   }
 
   /**
-	  * Since we are running the fetch to Id, we couldn’t exploit parallelism for reading from both sources at the same time. Let’s do some imports in order to be able to run fetches to a Future.
+	  * Since we are running the fetch to `Id`, we couldn’t exploit parallelism for reading from both sources at the same time. Let’s do some imports in order to be able to run fetches to a `Future`.
 	  * {{{
 	  * import scala.concurrent._
 	  * import ExecutionContext.Implicits.global
 	  * import scala.concurrent.duration._
 	  * }}}
-	  * Let’s see what happens when running the same fetch to a Future, note that you cannot block for a future’s result in Scala.js.
+	  * Let’s see what happens when running the same fetch to a `Future`, note that you cannot block for a future’s result in Scala.js.
 	  * {{{
 	  * import fetch.implicits._
 	  * *
@@ -458,7 +468,7 @@ object UsageSection extends FlatSpec with Matchers with Section {
 	  * combinator. It takes a `List[Fetch[A]]` and gives you back a `Fetch[List[A]]`, batching the fetches to the same
 	  * data source and running fetches to different sources in parallel.
 	  * Note that the `sequence` combinator is more general and works not only on lists but on any type that
-	  * has a [http://typelevel.org/cats/tut/traverse.html] Traverse] instance.
+	  * has a [[http://typelevel.org/cats/tut/traverse.html Traverse]] instance.
 	  *
 	  * Since `sequence` uses applicative operations internally, the library is able to perform optimizations
 	  * across all the sequenced fetches.

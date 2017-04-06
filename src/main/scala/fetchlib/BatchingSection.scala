@@ -30,7 +30,7 @@ object BatchingSection extends FlatSpec with Matchers with Section {
   /**
 	  *
 	  * = Maximum batch size =
-	  * When implementing a DataSource, there is a method we can override called maxBatchSize.
+	  * When implementing a `DataSource`, there is a method we can override called `maxBatchSize`.
 	  * When implementing it we can specify the maximum size of the batched requests to this data source,
 	  * let’s try it out:
 	  *
@@ -70,7 +70,7 @@ object BatchingSection extends FlatSpec with Matchers with Section {
 	  * In the presence of multiple concurrent batches,
 	  * we can choose between a sequential or parallel execution strategy.
 	  * By default they will be run in parallel,
-	  * but you can tweak it by overriding DataSource#batchExection.
+	  * but you can tweak it by overriding `DataSource#batchExection`.
 	  *
 	  * {{{
 	  *

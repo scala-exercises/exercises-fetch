@@ -33,7 +33,7 @@ object CachingSection extends FlatSpec with Matchers with Section {
 	  * We'll be using the default in-memory cache, prepopulated with some data. The cache key of an identity
 	  * is calculated with the `DataSource`'s `identity` method.
 	  *
-	  * We can pass a cache as the second argument when running a fetch with Fetch.run.
+	  * We can pass a cache as the second argument when running a fetch with `Fetch.run`.
 	  *
 	  */
   def prepopulating(res0: User) = {
@@ -46,7 +46,7 @@ object CachingSection extends FlatSpec with Matchers with Section {
 	  * And as the first when using fetch syntax:
 	  * {{{
 	  *fetchUser.runA[Id](cache)
-	  * res: cats.Id[User] = User(1,@dialelo)
+	  * res: cats.Id[User] = User(1,@one)
 	  * }}}
 	  * As you can see, when all the data is cached, no query to the data sources is executed since the results are available in the cache.
 	  *
@@ -63,8 +63,8 @@ object CachingSection extends FlatSpec with Matchers with Section {
 	  *
 	  * When running a fetch, we are generally interested in its final result.
 	  * However, we also have access to the cache and information about the executed rounds once we run a fetch.
-	  * Fetch’s interpreter keeps its state in an environment (implementing the Env trait),
-	  * and we can get both the environment and result after running a fetch using Fetch.runFetch instead of Fetch.run or value.runF via it’s implicit syntax.
+	  * Fetch’s interpreter keeps its state in an environment (implementing the `Env` trait),
+	  * and we can get both the environment and result after running a fetch using `Fetch.runFetch` instead of `Fetch.run` or `value.runF` via it’s implicit syntax.
 	  *
 	  * Knowing this, we can replay a fetch reusing the cache of a previous one. The replayed fetch won't have to call any of the
 	  * data sources.

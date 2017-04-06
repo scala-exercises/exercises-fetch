@@ -68,8 +68,9 @@ object ConcurrencyMonadsSection extends FlatSpec with Matchers with Section {
     import scala.concurrent.{Await, Future}
 
     val op = homePage.runA[Future] map {
-      case (posts, topics) =>
+      case (posts, topics) => {
         (posts.size, topics.size)
+      }
     }
 
     val result = Await.result(op, Duration.Inf)
@@ -104,8 +105,9 @@ object ConcurrencyMonadsSection extends FlatSpec with Matchers with Section {
     val scheduler = Scheduler.Implicits.global
 
     val op = homePage.runA[Task] map {
-      case (posts, topics) =>
+      case (posts, topics) => {
         (posts.size, topics.size)
+      }
     }
 
     val result = Await.result(op.runAsync(scheduler), Duration.Inf)
@@ -116,7 +118,7 @@ object ConcurrencyMonadsSection extends FlatSpec with Matchers with Section {
   /**
 	  * = JVM =
 	  * *
-	  * In the JVM, you may want to choose a scheduler tuned for IO workloads to interpret fetches.
+	  * In the JVM, you may want to choose a [scheduler tuned for IO workloads](https://monix.io/docs/2x/execution/scheduler.html#builders-on-the-jvm) to interpret fetches.
 	  * {{{
 	  * val ioSched = Scheduler.io(name="io-scheduler")
 	  * *
@@ -207,8 +209,9 @@ object ConcurrencyMonadsSection extends FlatSpec with Matchers with Section {
     val scheduler = Scheduler.Implicits.global
 
     val op = homePage.runA[Task](taskFetchMonadError) map {
-      case (posts, topics) =>
+      case (posts, topics) => {
         (posts.size, topics.size)
+      }
     }
 
     val result = Await.result(op.runAsync(scheduler), Duration.Inf)

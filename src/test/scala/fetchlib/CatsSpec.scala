@@ -5,11 +5,11 @@
 
 package fetchlib
 
+import org.scalacheck.Shapeless._
 import org.scalaexercises.Test.testSuccess
 import org.scalatest.prop.Checkers
 import org.scalatest.refspec.RefSpec
 import shapeless.HNil
-import org.scalacheck.Shapeless._
 
 class CatsSpec extends RefSpec with Checkers {
 

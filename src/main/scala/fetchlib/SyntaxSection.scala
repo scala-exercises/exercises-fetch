@@ -94,13 +94,13 @@ object SyntaxSection extends FlatSpec with Matchers with Section {
   /**
 	  * = Companion object =
 	  *
-	  * We’ve been using Cats’ syntax and fetch.syntax throughout the examples since it’s more concise and general than the methods in the Fetch companion object. However, you can use the methods in the companion object directly.
+	  * We’ve been using Cats’ syntax and `fetch.syntax` throughout the examples since it’s more concise and general than the methods in the `Fetch` companion object. However, you can use the methods in the companion object directly.
 	  *
 	  * Note that using cats syntax gives you a plethora of combinators, much richer that what the companion object provides.
 	  *
 	  * = Pure =
 	  *
-	  * Plain values can be lifted to the Fetch monad with Fetch#pure:
+	  * Plain values can be lifted to the Fetch monad with `Fetch#pure`:
 	  *
 	  * Executing a pure fetch doesn’t query any data source, as expected.
 	  */
@@ -114,7 +114,7 @@ object SyntaxSection extends FlatSpec with Matchers with Section {
 	  *
 	  * = Error =
 	  *
-	  * Errors can also be lifted to the Fetch monad via Fetch#error.
+	  * Errors can also be lifted to the Fetch monad via `Fetch#error`.
 	  *
 	  * val fetchFail: Fetch[Int] = Fetch.error(new Exception("Something went terribly wrong"))
 	  * Note that interpreting an errorful fetch to Id will throw the exception.
@@ -125,7 +125,7 @@ object SyntaxSection extends FlatSpec with Matchers with Section {
 	  *
 	  * = Join =
 	  *
-	  * We can compose two independent fetches with Fetch#join.
+	  * We can compose two independent fetches with `Fetch#join`.
 	  *
 	  * If the fetches are to the same data source they will be batched; if they aren’t, they will be evaluated at the same time.
 	  */
@@ -139,9 +139,9 @@ object SyntaxSection extends FlatSpec with Matchers with Section {
 	  *
 	  * = Sequence =
 	  *
-	  * The Fetch#sequence combinator turns a List[Fetch[A]] into a Fetch[List[A]], running all the fetches concurrently and batching when possible.
+	  * The `Fetch#sequence` combinator turns a `List[Fetch[A]]` into a `Fetch[List[A]]`, running all the fetches concurrently and batching when possible.
 	  *
-	  * Note that Fetch#sequence is not as general as the sequence method from Traverse, but performs the same optimizations.
+	  * Note that `Fetch#sequence` is not as general as the `sequence` method from `Traverse`, but performs the same optimizations.
 	  */
   def companionSequence(res0: List[User]) = {
     val fetchSequence: Fetch[List[User]] = Fetch.sequence(List(getUser(1), getUser(2), getUser(3)))
@@ -152,9 +152,9 @@ object SyntaxSection extends FlatSpec with Matchers with Section {
   /**
 	  * = Traverse =
 	  *
-	  * The Fetch#traverse combinator is a combination of map and sequence.
+	  * The `Fetch#traverse` combinator is a combination of `map` and `sequence`.
 	  *
-	  * Note that Fetch#traverse is not as general as the traverse method from Traverse, but performs the same optimizations.
+	  * Note that `Fetch#traverse` is not as general as the `traverse` method from `Traverse`, but performs the same optimizations.
 	  */
   def companionTraverse(res0: List[User]) = {
 
