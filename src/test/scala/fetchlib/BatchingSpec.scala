@@ -14,9 +14,9 @@ import shapeless.HNil
 class BatchingSpec extends RefSpec with Checkers {
 
   def `Batching Maximum batch size`: Unit =
-    check(testSuccess(BatchingSection.maximumSize _, 4 :: HNil))
+    check(testSuccess(BatchingSection.maximumSize _, 1 :: HNil))
 
   def `Batching Batch execution strategy`: Unit =
-    check(testSuccess(BatchingSection.executionStrategy _, 4 :: HNil))
+    check(testSuccess(BatchingSection.executionStrategy _, 2 :: HNil))
 
 }

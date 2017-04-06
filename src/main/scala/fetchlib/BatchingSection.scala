@@ -61,8 +61,8 @@ object BatchingSection extends FlatSpec with Matchers with Section {
    * let’s see what happens when running a fetch that needs more than two users:
    */
   def maximumSize(res0: Int) = {
-    val fetchManyBatchedUsers: Fetch[List[User]] = List(1, 2, 3, 4).traverse(getSequentialUser)
-    fetchManyBatchedUsers.runA[Id].size shouldBe res0
+    val fetchManyBatchedUsers: Fetch[List[User]] = List(1, 2, 3, 4).traverse(getBatchedUser)
+    fetchManyBatchedUsers.runE[Id].rounds.size shouldBe res0
   }
 
   /**
@@ -103,6 +103,6 @@ object BatchingSection extends FlatSpec with Matchers with Section {
    */
   def executionStrategy(res0: Int) = {
     val fetchManySeqBatchedUsers: Fetch[List[User]] = List(1, 2, 3, 4).traverse(getSequentialUser)
-    fetchManySeqBatchedUsers.runA[Id].size shouldBe res0
+    fetchManySeqBatchedUsers.runE[Id].rounds.size shouldBe res0
   }
 }
