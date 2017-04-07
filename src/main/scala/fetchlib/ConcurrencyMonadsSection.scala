@@ -68,12 +68,11 @@ object ConcurrencyMonadsSection extends FlatSpec with Matchers with Section {
     import scala.concurrent.{Await, Future}
 
     val op = homePage.runA[Future] map {
-      case (posts, topics) => {
+      case (posts, topics) =>
         (posts.size, topics.size)
-      }
     }
 
-    val result = Await.result(op, Duration.Inf)
+    val result = Await.result(op, 5 seconds)
 
     result shouldBe res0
   }
@@ -81,7 +80,8 @@ object ConcurrencyMonadsSection extends FlatSpec with Matchers with Section {
   /**
    * = Monix Task =
    *
-   * The [Monix](https://monix.io/) library provides an abstraction for lazy, asynchronous computations with its [Task](https://monix.io/docs/2x/eval/task.html) type.
+   * The [Monix](https://monix.io/) library provides an abstraction for lazy, asynchronous computations with its
+   * [Task](https://monix.io/docs/2x/eval/task.html) type.
    *
    * For using `Task` as the target concurrency monad of a fetch, add the following dependency to your build file:
    *
@@ -89,7 +89,8 @@ object ConcurrencyMonadsSection extends FlatSpec with Matchers with Section {
    * "com.fortysevendeg" %% "fetch-monix" % _fetchVersion_
    * }}}
    *
-   * And do some standard imports, we'll need an Scheduler for running our tasks as well as the instance of `FetchMonadError[Task]` that `fetch-monix` provides:
+   * And do some standard imports, we'll need an Scheduler for running our tasks as well as the instance of
+   * `FetchMonadError[Task]` that `fetch-monix` provides:
    *
    * {{{
    * import monix.eval.Task
@@ -97,7 +98,8 @@ object ConcurrencyMonadsSection extends FlatSpec with Matchers with Section {
    *
    * import fetch.monixTask.implicits._
    * }}}
-   * Note that running a fetch to a `Task` doesn't trigger execution. We can interpret a task to a `Future` with the `Task#runAsync` method. We'll use the global scheduler for now.
+   * Note that running a fetch to a `Task` doesn't trigger execution. We can interpret a task to a `Future` with
+   * the `Task#runAsync` method. We'll use the global scheduler for now.
    *
    */
   def monixTask(res0: (Int, Int)) = {
@@ -105,36 +107,39 @@ object ConcurrencyMonadsSection extends FlatSpec with Matchers with Section {
     val scheduler = Scheduler.Implicits.global
 
     val op = homePage.runA[Task] map {
-      case (posts, topics) => {
+      case (posts, topics) =>
         (posts.size, topics.size)
-      }
     }
 
-    val result = Await.result(op.runAsync(scheduler), Duration.Inf)
+    val result = Await.result(op.runAsync(scheduler), 5 seconds)
 
     result shouldBe res0
   }
 
   /**
    * = JVM =
-   * *
-   * In the JVM, you may want to choose a [scheduler tuned for IO workloads](https://monix.io/docs/2x/execution/scheduler.html#builders-on-the-jvm) to interpret fetches.
+   *
+   * In the JVM, you may want to choose a
+   * [scheduler tuned for IO workloads](https://monix.io/docs/2x/execution/scheduler.html#builders-on-the-jvm) to interpret fetches.
    * {{{
    * val ioSched = Scheduler.io(name="io-scheduler")
-   * *
-   *Await.result(task.runAsync(ioSched), Duration.Inf)
+   *
+   *Await.result(task.runAsync(ioSched), 5 seconds)
    * }}}
    * = Custom types =
    *
-   * If you want to run a fetch to a custom type `M[_]`, you need to implement the `FetchMonadError[M]` typeclass. `FetchMonadError[M]` is simply a `MonadError[M, Throwable]` from cats augmented
+   * If you want to run a fetch to a custom type `M[_]`, you need to implement the `FetchMonadError[M]` typeclass.
+   * `FetchMonadError[M]` is simply a `MonadError[M, Throwable]` from cats augmented
    * with a method for running a `Query[A]` in the context of the monad `M[A]`.
    *
    * For ilustrating integration with an asynchronous concurrency monad we'll use the implementation of Monix Task.
    *
    * = Running queries =
    *
-   * First of all, we need to run queries in our target type. As we have learned, queries can be synchronous (simply wrapping an `Eval` from Cats) or asynchronous. Since we'll need to lift
-   * `Eval[A]` values to `Task[A]`, let's write a function for doing so first. Note that Monix's `Task` supports the same evaluation strategies of `Eval` in Cats, so the conversion is very
+   * First of all, we need to run queries in our target type. As we have learned, queries can be synchronous
+   * (simply wrapping an `Eval` from Cats) or asynchronous. Since we'll need to lift
+   * `Eval[A]` values to `Task[A]`, let's write a function for doing so first. Note that Monix's `Task`
+   * supports the same evaluation strategies of `Eval` in Cats, so the conversion is very
    * direct:
    *
    * {{{
@@ -149,7 +154,9 @@ object ConcurrencyMonadsSection extends FlatSpec with Matchers with Section {
    * }
    * }}}
    *
-   * Now that we can run synchronous queries to `Task`, we'll use `Task#create` for running asynchronous computations. Queries also have a third option: `Ap`, which delegates the applicative combination of independent queries to the target monad.
+   * Now that we can run synchronous queries to `Task`, we'll use `Task#create` for running asynchronous computations.
+   * Queries also have a third option: `Ap`, which delegates the applicative combination of independent
+   * queries to the target monad.
    *
    * {{{
    * import monix.execution.Cancelable
@@ -186,11 +193,15 @@ object ConcurrencyMonadsSection extends FlatSpec with Matchers with Section {
    * = Writing the FetchMonadError instance =
    *
    * Now we're ready for implementing the FetchMonadError instance for `Task`, we need to define it as an implicit.
-   * Note that Cats' typeclass hierarchy is expressed with inheritance and methods from weaker typeclasses like `Functor` or `Applicative`
-   * in more powerful typeclasses like `Monad` are implemented in terms of the operations of the latter.
-   * In practice, this means that if you just implement `pure` and `flatMap` the rest of the combinators like `map` are going to be implemented in terms of them.
-   * Because of this we'll override `map` for not using `flatMap` and `product` for expressing the independence of two computations.
-   * We make use of the `FromMonadError` class below, making it easer to implement `FetchMonadError[Task]` given a `MonadError[Task, Throwable]` which we can get from the monix-cats projects.
+   * Note that Cats' typeclass hierarchy is expressed with inheritance and methods from weaker typeclasses like
+   * `Functor` or `Applicative` in more powerful typeclasses like `Monad` are implemented in
+   * terms of the operations of the latter.
+   * In practice, this means that if you just implement `pure` and `flatMap` the rest of the combinators like
+   * `map` are going to be implemented in terms of them.
+   * Because of this we'll override `map` for not using `flatMap` and `product` for expressing the independence of
+   * two computations.
+   * We make use of the `FromMonadError` class below, making it easer to implement `FetchMonadError[Task]` given
+   * a `MonadError[Task, Throwable]` which we can get from the monix-cats projects.
    */
   def customTypes(res0: (Int, Int)) = {
     import monix.cats._
@@ -209,12 +220,11 @@ object ConcurrencyMonadsSection extends FlatSpec with Matchers with Section {
     val scheduler = Scheduler.Implicits.global
 
     val op = homePage.runA[Task](taskFetchMonadError) map {
-      case (posts, topics) => {
+      case (posts, topics) =>
         (posts.size, topics.size)
-      }
     }
 
-    val result = Await.result(op.runAsync(scheduler), Duration.Inf)
+    val result = Await.result(op.runAsync(scheduler), 5 seconds)
 
     result shouldBe res0
 

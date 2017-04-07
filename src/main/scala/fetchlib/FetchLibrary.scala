@@ -20,7 +20,7 @@ object FetchLibrary extends Library {
 
   override def color = Some("#2F2859")
 
-  override def sections = {
+  override def sections =
     List(
       UsageSection,
       CachingSection,
@@ -28,8 +28,7 @@ object FetchLibrary extends Library {
       ErrorHandlingSection,
       SyntaxSection,
       CatsSection,
-      ConcurrencyMonadsSection,
-      DebuggingSection
+      ConcurrencyMonadsSection
     )
-  }
+
 }

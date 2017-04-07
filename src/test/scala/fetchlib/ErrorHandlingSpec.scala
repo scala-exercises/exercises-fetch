@@ -14,21 +14,15 @@ import shapeless.HNil
 class ErrorHandlingSpec extends RefSpec with Checkers {
 
   def `Exception`: Unit =
-    check(testSuccess(ErrorHandlingSection.catsEval _, "Left(fetch.UnhandledException)" :: HNil))
+    check(testSuccess(ErrorHandlingSection.catsEval _, true :: HNil))
 
   def `Debug`: Unit =
-    check(
-      testSuccess(ErrorHandlingSection.debugDescribe _, "Left(fetch.UnhandledException)" :: HNil))
+    check(testSuccess(ErrorHandlingSection.debugDescribe _, true :: HNil))
 
   def `One Request`: Unit =
-    check(testSuccess(ErrorHandlingSection.oneRequest _, "Left(fetch.NotFound)" :: HNil))
+    check(testSuccess(ErrorHandlingSection.oneRequest _, true :: HNil))
 
-  def `Missing`: Unit = {
-    check(
-      testSuccess(
-        ErrorHandlingSection.missing _,
-        "Missing identities Map(User -> List(5, 6))" ::
-          "Environment FetchEnv(InMemoryCache(Map()),Queue())" :: HNil))
-  }
+  def `Missing`: Unit =
+    check(testSuccess(ErrorHandlingSection.missing _, 2 :: HNil))
 
 }

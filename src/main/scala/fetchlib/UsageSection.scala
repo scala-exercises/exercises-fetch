@@ -68,7 +68,8 @@ import org.scalatest.{FlatSpec, Matchers}
  *
  * There are two methods: `fetchOne` and `fetchMany`. `fetchOne` receives one identity and must return
  * a `Query` containing
- * an optional result. Returning an `Option` Fetch can detect whether an identity couldn't be fetched or no longer exists.
+ * an optional result. Returning an `Option` Fetch can detect whether an identity couldn't be
+ * fetched or no longer exists.
  *
  * `fetchMany` method takes a non-empty list of identities and must return a `Query` containing
  * a map from identities to results. Accepting a list of identities gives Fetch the ability to batch requests to
@@ -79,8 +80,8 @@ import org.scalatest.{FlatSpec, Matchers}
  *
  * = Writing your first data source =
  *
- * Now that we know about the `DataSource` typeclass, let's write our first data source! We'll start by implementing a data
- * source for fetching users given their id.
+ * Now that we know about the `DataSource` typeclass, let's write our first data source! We'll start by
+ * implementing a data source for fetching users given their id.
  * The first thing we'll do is define the types for user ids and users.
  *
  * {{{
@@ -138,7 +139,9 @@ import org.scalatest.{FlatSpec, Matchers}
  * }}}
  * = Data sources that don’t support batching =
  *
- * If your data source doesn’t support batching, you can use the `DataSource#batchingNotSupported` method as the implementation of `fetchMany`. Note that it will use the `fetchOne` implementation for requesting identities one at a time.
+ * If your data source doesn’t support batching, you can use the `DataSource#batchingNotSupported` method as the
+ * implementation of `fetchMany`. Note that it will use the `fetchOne`
+ * implementation for requesting identities one at a time.
  * {{{
  * implicit object UnbatchedSource extends DataSource[Int, Int]{
  * override def name = "Unbatched"
@@ -153,7 +156,8 @@ import org.scalatest.{FlatSpec, Matchers}
  * }}}
  * = Data sources that only support batching =
  *
- * If your data source only supports querying it in batches, you can implement `fetchOne` in terms of `fetchMany` using `DataSource#batchingOnly`.
+ * If your data source only supports querying it in batches, you can implement `fetchOne` in terms of `fetchMany`
+ * using `DataSource#batchingOnly`.
  * {{{
  * implicit object OnlyBatchedSource extends DataSource[Int, Int]{
  * override def name = "OnlyBatched"
@@ -198,8 +202,8 @@ object UsageSection extends FlatSpec with Matchers with Section {
    *
    * Note that running a fetch to non-concurrency monads like `Id` or `Eval` is not supported in Scala.js.
    * In real-life scenarios you'll want to run your fetches to `Future` or a `Task` type provided by a library like
-   * [[https://monix.io/ Monix]] or [[https://github.com/functional-streams-for-scala/fs2 fs2]], both of which are supported
-   * in Fetch.
+   * [[https://monix.io/ Monix]] or [[https://github.com/functional-streams-for-scala/fs2 fs2]], both of which
+   * are supported in Fetch.
    *
    * We can now run the fetch and see its result:
    *
@@ -316,7 +320,9 @@ object UsageSection extends FlatSpec with Matchers with Section {
    * {{{
    *Query.sync({ println("Computing 42"); 42 })
    * }}}
-   * Synchronous queries simply wrap a Cats’ `Eval` instance, which captures the notion of a lazy synchronous computation. You can lift an `Eval[A]` into a `Query[A]` too:
+   * Synchronous queries simply wrap a Cats’ `Eval` instance, which captures the
+   * notion of a lazy synchronous computation.
+   * You can lift an `Eval[A]` into a `Query[A]` too:
    * {{{
    * import cats.Eval
    *Query.eval(Eval.always({ println("Computing 42"); 42 }))
@@ -348,7 +354,8 @@ object UsageSection extends FlatSpec with Matchers with Section {
    * case class Post(id: PostId, author: UserId, content: String)
    * }}}
    *
-   * As you can see, every `Post` has an author, but it refers to the author by its id. We'll implement a data source for retrieving a post given a post id.
+   * As you can see, every `Post` has an author, but it refers to the author by its id.
+   * We'll implement a data source for retrieving a post given a post id.
    *
    * {{{
    * val postDatabase: Map[PostId, Post] = Map(
@@ -442,16 +449,19 @@ object UsageSection extends FlatSpec with Matchers with Section {
   }
 
   /**
-   * Since we are running the fetch to `Id`, we couldn’t exploit parallelism for reading from both sources at the same time. Let’s do some imports in order to be able to run fetches to a `Future`.
+   * Since we are running the fetch to `Id`, we couldn’t exploit parallelism
+   * for reading from both sources at the same time.
+   * Let’s do some imports in order to be able to run fetches to a `Future`.
    * {{{
    * import scala.concurrent._
    * import ExecutionContext.Implicits.global
    * import scala.concurrent.duration._
    * }}}
-   * Let’s see what happens when running the same fetch to a `Future`, note that you cannot block for a future’s result in Scala.js.
+   * Let’s see what happens when running the same fetch to a `Future`,
+   * note that you cannot block for a future’s result in Scala.js.
    * {{{
    * import fetch.implicits._
-   * *
+   *
    * Await.result(fetchConcurrent.runA[Future], Duration.Inf)
    * res: (Post, User) = (Post(1,2,An article),User(2,@two))
    * }}}
@@ -459,8 +469,8 @@ object UsageSection extends FlatSpec with Matchers with Section {
    *
    * = Combinators =
    *
-   * Besides `flatMap` for sequencing fetches and `product` for running them concurrently, Fetch provides a number of
-   * other combinators.
+   * Besides `flatMap` for sequencing fetches and `product` for running them concurrently,
+   * Fetch provides a number of other combinators.
    *
    * = Sequence =
    *

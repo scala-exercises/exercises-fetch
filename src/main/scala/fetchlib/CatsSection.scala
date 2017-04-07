@@ -54,11 +54,8 @@ object CatsSection extends FlatSpec with Matchers with Section {
    * More interestingly, we can use it to apply a pure function to the results of various fetches.
    */
   def applicative(res0: String) = {
-    val fetchFriends: Fetch[String] = (getUser(1) |@| getUser(2)).map({ (one, other) =>
-      {
-        s"${one.username} is friends with ${other.username}"
-      }
-    })
+    val fetchFriends: Fetch[String] = (getUser(1) |@| getUser(2)).map((one, other) =>
+      s"${one.username} is friends with ${other.username}")
 
     fetchFriends.runA[Id] shouldBe res0
   }
@@ -70,9 +67,8 @@ object CatsSection extends FlatSpec with Matchers with Section {
     val fetchLoves: Fetch[String] = Fetch
       .join(getUser(1), getUser(2))
       .map({
-        case (one, other) => {
+        case (one, other) =>
           s"${one.username} loves ${other.username}"
-        }
       })
 
     fetchLoves.runA[Id] shouldBe res0

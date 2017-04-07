@@ -12,7 +12,7 @@ import fetch._
 import fetch.syntax._
 import fetch.unsafe.implicits._
 import org.scalaexercises.definitions.Section
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.{Assertion, FlatSpec, Matchers}
 
 /**
  * = Batching =
@@ -34,7 +34,7 @@ object BatchingSection extends FlatSpec with Matchers with Section {
    * When implementing it we can specify the maximum size of the batched requests to this data source,
    * let’s try it out:
    *
-   * {{{
+   * {{{+
    *
    * implicit object BatchedUserSource extends DataSource[UserId, User]{
    * override def name = "BatchedUser"

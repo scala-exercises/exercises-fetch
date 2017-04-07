@@ -94,9 +94,12 @@ object SyntaxSection extends FlatSpec with Matchers with Section {
   /**
    * = Companion object =
    *
-   * We’ve been using Cats’ syntax and `fetch.syntax` throughout the examples since it’s more concise and general than the methods in the `Fetch` companion object. However, you can use the methods in the companion object directly.
+   * We’ve been using Cats’ syntax and `fetch.syntax` throughout the examples since it’s more concise and
+   * general than the methods in the `Fetch` companion object.
+   * However, you can use the methods in the companion object directly.
    *
-   * Note that using cats syntax gives you a plethora of combinators, much richer that what the companion object provides.
+   * Note that using cats syntax gives you a plethora of combinators,
+   * much richer that what the companion object provides.
    *
    * = Pure =
    *
@@ -127,7 +130,8 @@ object SyntaxSection extends FlatSpec with Matchers with Section {
    *
    * We can compose two independent fetches with `Fetch#join`.
    *
-   * If the fetches are to the same data source they will be batched; if they aren’t, they will be evaluated at the same time.
+   * If the fetches are to the same data source they will be batched; if they aren’t,
+   * they will be evaluated at the same time.
    */
   def companionJoin(res0: (Post, User)) = {
     val fetchJoined: Fetch[(Post, User)] = Fetch.join(getPost(1), getUser(2))

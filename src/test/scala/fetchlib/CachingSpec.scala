@@ -15,14 +15,14 @@ import shapeless.HNil
 class CachingSpec extends RefSpec with Checkers {
 
   def `Cache Prepopulating`: Unit =
-    check(testSuccess(CachingSection.prepopulating _, userDatabase(1) :: HNil))
+    check(testSuccess(CachingSection.prepopulating _, 1 :: "@one" :: HNil))
 
   def `Cache Partial Hits`: Unit =
-    check(testSuccess(CachingSection.cachePartialHits _, 3 :: HNil))
+    check(testSuccess(CachingSection.cachePartialHits _, "@one" :: "@dialelo" :: HNil))
 
   def `Cache Replay`: Unit =
-    check(testSuccess(CachingSection.replaying _, 1 :: 3 :: HNil))
+    check(testSuccess(CachingSection.replaying _, 1 :: 0 :: HNil))
 
   def `Cache Custom`: Unit =
-    check(testSuccess(CachingSection.customCache _, (userDatabase(1), userDatabase(1)) :: HNil))
+    check(testSuccess(CachingSection.customCache _, 2 :: HNil))
 }
