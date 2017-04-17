@@ -231,9 +231,7 @@ object UsageSection extends FlatSpec with Matchers with Section {
     val fetchTwoUsers: Fetch[(User, User)] = for {
       aUser       <- getUser(1)
       anotherUser <- getUser(aUser.id + 1)
-    } yield {
-      (aUser, anotherUser)
-    }
+    } yield (aUser, anotherUser)
 
     val (env, result) = fetchTwoUsers.runF[Id]
 
@@ -295,9 +293,7 @@ object UsageSection extends FlatSpec with Matchers with Section {
     val fetchCached: Fetch[(User, User)] = for {
       aUser       <- getUser(1)
       anotherUser <- getUser(1)
-    } yield {
-      (aUser, anotherUser)
-    }
+    } yield (aUser, anotherUser)
 
     fetchCached.runA[Id] shouldBe res0
   }
@@ -424,9 +420,7 @@ object UsageSection extends FlatSpec with Matchers with Section {
     val fetchMulti: Fetch[(Post, PostTopic)] = for {
       post  <- getPost(1)
       topic <- getPostTopic(post)
-    } yield {
-      (post, topic)
-    }
+    } yield (post, topic)
 
     fetchMulti.runA[Id] shouldBe res0
   }
