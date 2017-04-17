@@ -190,7 +190,6 @@ object ErrorHandlingSection extends FlatSpec with Matchers with Section {
     value.isLeft shouldBe res0
     println(value.fold(describe, identity))
 
-    // [Error] Identity not found: 5 in `User`, fetch interrupted after 0 rounds
   }
 
   /**

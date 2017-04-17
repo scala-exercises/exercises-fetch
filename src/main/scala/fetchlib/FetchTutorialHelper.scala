@@ -99,11 +99,7 @@ object FetchTutorialHelper {
 
     override def fetchOne(id: Post): Query[Option[PostTopic]] = {
       Query.sync({
-        val topic = if (id.id % 2 == 0) {
-          "monad"
-        } else {
-          "applicative"
-        }
+        val topic = if (id.id % 2 == 0) "monad" else "applicative"
         latency(Option(topic), s"One Post Topic $id")
       })
     }
@@ -111,15 +107,7 @@ object FetchTutorialHelper {
     override def fetchMany(ids: NonEmptyList[Post]): Query[Map[Post, PostTopic]] = {
       Query.sync({
         val result =
-          ids.toList
-            .map(id => {
-              (id, if (id.id % 2 == 0) {
-                "monad"
-              } else {
-                "applicative"
-              })
-            })
-            .toMap
+          ids.toList.map(id => (id, if (id.id % 2 == 0) "monad" else "applicative")).toMap
         latency(result, s"Many Post Topics $ids")
       })
     }
@@ -136,17 +124,13 @@ object FetchTutorialHelper {
           author.username
       })
       .map(_._1)
-  } yield {
-    ordered
-  }
+  } yield ordered
 
   val postTopics: Fetch[Map[PostTopic, Int]] = for {
     posts  <- List(2, 3).traverse(getPost)
     topics <- posts.traverse(getPostTopic)
     countByTopic = (posts zip topics).groupBy(_._2).mapValues(_.size)
-  } yield {
-    countByTopic
-  }
+  } yield countByTopic
 
   val homePage = (postsByAuthor |@| postTopics).tupled
 
