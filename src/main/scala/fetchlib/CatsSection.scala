@@ -5,19 +5,16 @@
 
 package fetchlib
 
-import cats.data.NonEmptyList
-import org.scalatest._
-import fetch._
-
 import cats._
-import fetch.unsafe.implicits._
+import cats.syntax.cartesian._
+import fetch._
 import fetch.syntax._
-import scala.util.Try
-
-import org.scalaexercises.definitions._
+import fetch.unsafe.implicits._
+import org.scalaexercises.definitions.Section
+import org.scalatest.{FlatSpec, Matchers}
 
 /**
- * = cats =
+ * = Cats =
  *
  * Fetch is built using Cats' Free monad construction and thus works out of the box with
  * cats syntax. Using Cats' syntax, we can make fetch declarations more concise, without
@@ -34,6 +31,8 @@ import org.scalaexercises.definitions._
  */
 object CatsSection extends FlatSpec with Matchers with Section {
 
+  import FetchTutorialHelper._
+
   /**
    * = Applicative =
    *
@@ -41,33 +40,38 @@ object CatsSection extends FlatSpec with Matchers with Section {
    * are from different types, and apply a pure function to their results. We can use it
    * as a more powerful alternative to the `product` method or `Fetch#join`:
    *
-   * ```tut:silent
-   * ```
-   *
    * Notice how the queries to posts are batched.
    *
-   * ```tut:book
-   * fetchThree.runA[Id]
-   * ```
+   * {{{
+   *   import cats.syntax.cartesian._
    *
+   *   val fetchThree: Fetch[(Post, User, Post)] = (getPost(1) |@| getUser(2) |@| getPost(2)).tupled
+   *
+   *    fetchThree.runA[Id]
+   *   // res: (Post(1,2,An article),User(2,@two),Post(2,3,Another article))
+   * }}}
+   *
+   * More interestingly, we can use it to apply a pure function to the results of various fetches.
    */
-  def applicative(res0: Int) = {
-    import cats.syntax.cartesian._
+  def applicative(res0: String) = {
+    val fetchFriends: Fetch[String] = (getUser(1) |@| getUser(2)).map((one, other) =>
+      s"${one.username} is friends with ${other.username}")
 
-    val ops =
-      (1.fetch |@| 2.fetch).map((a, b) => a + b)
-
-    ops.runA[Id] should be(res0)
+    fetchFriends.runA[Id] shouldBe res0
   }
 
   /**
    * The above example is equivalent to the following using the `Fetch#join` method:
    */
-  def similarToJoin(res0: Int) = {
-    val ops =
-      Fetch.join(1.fetch, 2.fetch).map { case (a, b) => a + b }
+  def similarToJoin(res0: String) = {
+    val fetchLoves: Fetch[String] = Fetch
+      .join(getUser(1), getUser(2))
+      .map({
+        case (one, other) =>
+          s"${one.username} loves ${other.username}"
+      })
 
-    ops.runA[Id] should be(res0)
+    fetchLoves.runA[Id] shouldBe res0
   }
 
 }

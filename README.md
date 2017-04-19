@@ -4,7 +4,7 @@
 
 This repository hosts a content library for the [Scala Exercises](https://www.scala-exercises.org/) platform, including interactive exercises related to the [Fetch](https://github.com/47deg/fetch) data access library.
 
-## About Scala exercises
+## About Scala exercises
 
 "Scala Exercises" brings exercises for the Stdlib, Cats, Shapeless and many other great libraries for Scala to your browser. Offering hundreds of solvable exercises organized into several categories covering the basics of the Scala language and it's most important libraries.
 

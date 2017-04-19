@@ -5,12 +5,24 @@
 
 package fetchlib
 
+import cats.Eval
+import cats.data.NonEmptyList
+import cats.instances.list._
+import cats.syntax.cartesian._
+import cats.syntax.traverse._
+import fetch._
+import fetch.monixTask.implicits._
+import fetch.syntax._
+import fetch.unsafe.implicits._
+import monix.eval.Task
+import monix.execution.Cancelable
+
+import scala.concurrent.duration._
+
 object FetchTutorialHelper {
 
-  import fetch._
-  import cats.instances.list._
-
   type UserId = Int
+
   case class User(id: UserId, username: String)
 
   def latency[A](result: A, msg: String) = {
@@ -21,14 +33,13 @@ object FetchTutorialHelper {
     result
   }
 
-  import cats.data.NonEmptyList
-
   val userDatabase: Map[UserId, User] = Map(
     1 -> User(1, "@one"),
     2 -> User(2, "@two"),
     3 -> User(3, "@three"),
     4 -> User(4, "@four")
   )
+  val fetchException: Fetch[User] = new Exception("Oh noes").fetch
 
   implicit object UserSource extends DataSource[UserId, User] {
     override def name = "User"
@@ -38,6 +49,7 @@ object FetchTutorialHelper {
         latency(userDatabase.get(id), s"One User $id")
       })
     }
+
     override def fetchMany(ids: NonEmptyList[UserId]): Query[Map[UserId, User]] = {
       Query.sync({
         latency(userDatabase.filterKeys(ids.toList.contains), s"Many Users $ids")
@@ -47,7 +59,10 @@ object FetchTutorialHelper {
 
   def getUser(id: UserId): Fetch[User] = Fetch(id)
 
+  val cache = InMemoryCache(UserSource.identity(1) -> User(1, "@dialelo"))
+
   type PostId = Int
+
   case class Post(id: PostId, author: UserId, content: String)
 
   val postDatabase: Map[PostId, Post] = Map(
@@ -64,6 +79,7 @@ object FetchTutorialHelper {
         latency(postDatabase.get(id), s"One Post $id")
       })
     }
+
     override def fetchMany(ids: NonEmptyList[PostId]): Query[Map[PostId, Post]] = {
       Query.sync({
         latency(postDatabase.filterKeys(ids.toList.contains), s"Many Posts $ids")
@@ -87,6 +103,7 @@ object FetchTutorialHelper {
         latency(Option(topic), s"One Post Topic $id")
       })
     }
+
     override def fetchMany(ids: NonEmptyList[Post]): Query[Map[Post, PostTopic]] = {
       Query.sync({
         val result =
@@ -98,24 +115,15 @@ object FetchTutorialHelper {
 
   def getPostTopic(post: Post): Fetch[PostTopic] = Fetch(post)
 
-  val cache = InMemoryCache(UserSource.identity(1) -> User(1, "@dialelo"))
-
-  final case class ForgetfulCache() extends DataSourceCache {
-    override def get[A](k: DataSourceIdentity): Option[A]               = None
-    override def update[A](k: DataSourceIdentity, v: A): ForgetfulCache = this
-  }
-
-  import fetch.syntax._
-
-  val fetchError: Fetch[User] = (new Exception("Oh noes")).fetch
-
-  import cats.syntax.cartesian._
-  import cats.syntax.traverse._
-
   val postsByAuthor: Fetch[List[Post]] = for {
     posts   <- List(1, 2).traverse(getPost)
     authors <- posts.traverse(getAuthor)
-    ordered = (posts zip authors).sortBy({ case (_, author) => author.username }).map(_._1)
+    ordered = (posts zip authors)
+      .sortBy({
+        case (_, author) =>
+          author.username
+      })
+      .map(_._1)
   } yield ordered
 
   val postTopics: Fetch[Map[PostTopic, Int]] = for {
@@ -126,29 +134,41 @@ object FetchTutorialHelper {
 
   val homePage = (postsByAuthor |@| postTopics).tupled
 
-  import monix.eval.Task
+  final case class ForgetfulCache() extends DataSourceCache {
+    override def get[A](k: DataSourceIdentity): Option[A] = None
 
-  import monix.execution.Cancelable
-  import scala.concurrent.duration._
-  import fetch.monixTask.implicits._
+    override def update[A](k: DataSourceIdentity, v: A): ForgetfulCache = this
+  }
 
-  def queryToTask[A](q: Query[A]): Task[A] = q match {
-    case Sync(e) => evalToTask(e)
-    case Async(action, timeout) => {
-      val task: Task[A] = Task.create((scheduler, callback) => {
-        scheduler.execute(new Runnable {
-          def run() = action(callback.onSuccess, callback.onError)
+  val fetchError: Fetch[User] = new Exception("Oh noes").fetch
+
+  def queryToTask[A](q: Query[A]): Task[A] = {
+    q match {
+      case Sync(e) =>
+        evalToTask(e)
+      case Async(action, timeout) =>
+        val task: Task[A] = Task.create((scheduler, callback) => {
+          scheduler.execute(new Runnable {
+            def run() = action(callback.onSuccess, callback.onError)
+          })
+
+          Cancelable.empty
         })
 
-        Cancelable.empty
-      })
-
-      timeout match {
-        case finite: FiniteDuration => task.timeout(finite)
-        case _                      => task
-      }
+        timeout match {
+          case finite: FiniteDuration =>
+            task.timeout(finite)
+          case _ =>
+            task
+        }
+      case Ap(qf, qx) =>
+        Task
+          .zip2(queryToTask(qf), queryToTask(qx))
+          .map({
+            case (f, x) =>
+              f(x)
+          })
     }
-    case Ap(qf, qx) => Task.zip2(queryToTask(qf), queryToTask(qx)).map({ case (f, x) => f(x) })
   }
 
   def totalFetched(rounds: Seq[Round]): Int =
@@ -160,4 +180,56 @@ object FetchTutorialHelper {
       case FetchMany(ids, _)    => ids.toList.size
       case Concurrent(requests) => requests.toList.map(requestFetches).sum
     }
+  object BatchedUserSource extends DataSource[UserId, User] {
+    override def name = "BatchedUser"
+
+    override def maxBatchSize: Option[Int] = Some(2)
+
+    override def fetchOne(id: UserId): Query[Option[User]] = {
+      Query.sync({
+        latency(userDatabase.get(id), s"One User $id")
+      })
+    }
+    override def fetchMany(ids: NonEmptyList[UserId]): Query[Map[UserId, User]] = {
+      Query.sync({
+        latency(userDatabase.filterKeys(ids.toList.contains), s"Many Users $ids")
+      })
+    }
+  }
+
+  def getBatchedUser(id: Int): Fetch[User] = Fetch(id)(BatchedUserSource)
+  object SequentialUserSource extends DataSource[UserId, User] {
+    override def name = "SequentialUser"
+
+    override def maxBatchSize: Option[Int] = Some(2)
+
+    override def batchExecution: ExecutionType = Sequential
+
+    override def fetchOne(id: UserId): Query[Option[User]] = {
+      Query.sync({
+        latency(userDatabase.get(id), s"One User $id")
+
+      })
+    }
+
+    override def fetchMany(ids: NonEmptyList[UserId]): Query[Map[UserId, User]] = {
+      Query.sync({
+        latency(userDatabase.filterKeys(ids.toList.contains), s"Many Users $ids")
+
+      })
+    }
+
+  }
+
+  def getSequentialUser(id: Int): Fetch[User] = Fetch(id)(SequentialUserSource)
+
+  val failingFetch: Fetch[String] = for {
+    a <- getUser(1)
+    b <- getUser(2)
+    _ <- fetchException
+  } yield s"${a.username} loves ${b.username}"
+
+  val result: Eval[Either[FetchException, String]] =
+    FetchMonadError[Eval].attempt(failingFetch.runA[Eval])
+
 }
