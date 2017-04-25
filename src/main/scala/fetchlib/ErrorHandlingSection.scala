@@ -217,7 +217,7 @@ object ErrorHandlingSection extends FlatSpec with Matchers with Section {
    * {{{
    * import fetch.debug.describe
    *
-   * val missingUsers = List(3, 4, 5, 6).traverse(getUser)
+   * val missingUsers = List(3, 4, 6, 7).traverse(getUser)
    *
    *  val result: Eval[Either[FetchException, List[User]]] = missingUsers.runA[Eval].attempt
    * }}}
@@ -229,7 +229,7 @@ object ErrorHandlingSection extends FlatSpec with Matchers with Section {
    *   println(value.fold(describe, _.toString))
    *
    *   //   [Error] Missing identities, fetch interrupted after 0 rounds
-   *   //   `User` missing identities List(5, 6)
+   *   //   `User` missing identities List(6, 7)
    *
    * }}}
    * The `.missing` attribute will give us the mapping from data source name to missing identities, and `.env`
@@ -237,7 +237,7 @@ object ErrorHandlingSection extends FlatSpec with Matchers with Section {
    */
   def missing(res0: Int) = {
 
-    val missingUsers: Fetch[List[User]]                  = List(3, 4, 5, 6).traverse(getUser)
+    val missingUsers: Fetch[List[User]]                  = List(3, 4, 6, 7).traverse(getUser)
     val result: Eval[Either[FetchException, List[User]]] = missingUsers.runA[Eval].attempt
     val value: Either[FetchException, List[User]]        = result.value
 
