@@ -1,17 +1,15 @@
 /*
- * scala-exercises - exercises-fetch
- * Copyright (C) 2015-2016 47 Degrees, LLC. <http://www.47deg.com>
+ *  scala-exercises - exercises-fetch
+ *  Copyright (C) 2015-2019 47 Degrees, LLC. <http://www.47deg.com>
+ *
  */
 
 package fetchlib
 
 import cats._
-import cats.instances.list._
-import cats.syntax.cartesian._
-import cats.syntax.traverse._
+import cats.effect._
+import cats.implicits._
 import fetch._
-import fetch.syntax._
-import fetch.unsafe.implicits._
 import org.scalaexercises.definitions.Section
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -40,11 +38,11 @@ import org.scalatest.{FlatSpec, Matchers}
  * = Installation =
  *To begin, add the following dependency to your SBT build file:
  *{{{
- *"com.47deg" %% "fetch" % "0.6.0"
+ *"com.47deg" %% "fetch" % "1.2.1"
  *}}}
  *Or, if using Scala.js:
  *{{{
- *"com.47deg" %%% "fetch" % "0.6.0"
+ *"com.47deg" %%% "fetch" % "1.2.1"
  *}}}
  *Now you’ll have Fetch available in both Scala and Scala.js.
  *
@@ -53,11 +51,18 @@ import org.scalatest.{FlatSpec, Matchers}
  * In order to tell Fetch how to retrieve data, we must implement the `DataSource` typeclass.
  *
  * {{{
+ * import cats.effect.Concurrent
  * import cats.data.NonEmptyList
  *
- * trait DataSource[Identity, Result]{
- * def fetchOne(id: Identity): Query[Option[Result]]
- * def fetchMany(ids: NonEmptyList[Identity]): Query[Map[Identity, Result]]
+ * trait DataSource[F[_], Identity, Result]{
+ *   def data: Data[Identity, Result]
+ *
+ *   def CF: Concurrent[F]
+ *
+ *   def fetch(id: Identity): F[Option[Result]]
+ *
+ *   /* `batch` is implemented in terms of `fetch` by default */
+ *   def batch(ids: NonEmptyList[Identity]): F[Map[Identity, Result]]
  * }
  * }}}
  *
@@ -66,21 +71,22 @@ import org.scalatest.{FlatSpec, Matchers}
  * - `Identity`: the identity we want to fetch (a `UserId` if we were fetching users)
  * - `Result`: the type of the data we retrieve (a `User` if we were fetching users)
  *
- * There are two methods: `fetchOne` and `fetchMany`. `fetchOne` receives one identity and must return
- * a `Query` containing
+ * There are two methods: `fetch` and `batch`. `fetch` receives one identity and must return
+ * a `Concurrent` containing
  * an optional result. Returning an `Option` Fetch can detect whether an identity couldn't be
  * fetched or no longer exists.
  *
- * `fetchMany` method takes a non-empty list of identities and must return a `Query` containing
- * a map from identities to results. Accepting a list of identities gives Fetch the ability to batch requests to
- * the same data source, and returning a mapping from identities to results, Fetch can detect whenever an identity
- * couldn't be fetched or no longer exists.
+ * `batch` method takes a non-empty list of identities and must return a `Concurrent` containing
+ * a map from identities to results. Accepting a list of identities gives Fetch the ability to batch
+ * requests to the same data source, and returning a mapping from identities to results, Fetch can
+ * detect whenever an identity couldn’t be fetched or no longer exists.
  *
- * Returning `Query` makes it possible to run a fetch independently of the target monad.
+ * The `data` method returns a `Data[Identity, Result]` instance that Fetch uses to optimize requests to the
+ * same data source, and is expected to return a singleton `object` that extends `Data[Identity, Result]`.
  *
  * = Writing your first data source =
  *
- * Now that we know about the `DataSource` typeclass, let's write our first data source! We'll start by
+ * Now that we know about the DataSource` typeclass, let's write our first data source! We'll start by
  * implementing a data source for fetching users given their id.
  * The first thing we'll do is define the types for user ids and users.
  *
@@ -91,13 +97,14 @@ import org.scalatest.{FlatSpec, Matchers}
  *
  * We’ll simulate unpredictable latency with this function.
  * {{{
- * def latency[A](result: A, msg: String) = {
- *  val id = Thread.currentThread.getId
- *  println(s"~~> [$id] $msg")
- *  Thread.sleep(100)
- *  println(s"<~~ [$id] $msg")
- *  result
- * }
+ * import cats.effect._
+ * import cats.syntax.all._
+ *
+ * def latency[F[_] : Concurrent](msg: String): F[Unit] = for {
+ *   _ <- Sync[F].delay(println(s"--> [${Thread.currentThread.getId}] $msg"))
+ *   _ <- Sync[F].delay(Thread.sleep(100))
+ *   _ <- Sync[F].delay(println(s"<-- [${Thread.currentThread.getId}] $msg"))
+ * } yield ()
  * }}}
  * And now we're ready to write our user data source;
  * we'll emulate a database with an in-memory map.
@@ -105,29 +112,29 @@ import org.scalatest.{FlatSpec, Matchers}
  * {{{
  * import cats.data.NonEmptyList
  * import cats.instances.list._
- *
  * import fetch._
  *
  * val userDatabase: Map[UserId, User] = Map(
- * 1 -> User(1, "@one"),
- * 2 -> User(2, "@two"),
- * 3 -> User(3, "@three"),
- * 4 -> User(4, "@four")
+ *   1 -> User(1, "@one"),
+ *   2 -> User(2, "@two"),
+ *   3 -> User(3, "@three"),
+ *   4 -> User(4, "@four")
  * )
  *
- * implicit object UserSource extends DataSource[UserId, User]{
- * override def name = "User"
+ * object Users extends Data[UserId, User] {
+ *   def name = "Users"
  *
- * override def fetchOne(id: UserId): Query[Option[User]] = {
- * Query.sync({
- * latency(userDatabase.get(id), s"One User $id")
- * })
- * }
- * override def fetchMany(ids: NonEmptyList[UserId]): Query[Map[UserId, User]] = {
- * Query.sync({
- * latency(userDatabase.filterKeys(ids.toList.contains), s"Many Users $ids")
- * })
- * }
+ *   def source[F[_] : Concurrent]: DataSource[F, UserId, User] = new DataSource[F, UserId, User] {
+ *     override def data = Users
+ *
+ *     override def CF = Concurrent[F]
+ *
+ *     override def fetch(id: UserId): F[Option[User]] =
+ *       latency[F](s"One User $id") >> CF.pure(userDatabase.get(id))
+ *
+ *     override def batch(ids: NonEmptyList[UserId]): F[Map[UserId, User]] =
+ *       latency[F](s"Batch Users $ids") >> CF.pure(userDatabase.filterKeys(ids.toList.toSet).toMap)
+ *   }
  * }
  * }}}
  *
@@ -135,86 +142,137 @@ import org.scalatest.{FlatSpec, Matchers}
  * given an id, we just have to pass a `UserId` as an argument to `Fetch`.
  *
  * {{{
- * def getUser(id: UserId): Fetch[User] = Fetch(id) // or, more explicitly: Fetch(id)(UserSource)
+ * def getUser[F[_] : Concurrent](id: UserId): Fetch[F, User] =
+ *   Fetch(id, Users.source)
  * }}}
+ *
+ * = Optional identities =
+ *
+ * If you want to create a Fetch that doesn’t fail if the identity is not found, you can use
+ * `Fetch#optional` instead of `Fetch#apply`. Note that instead of a `Fetch[F, A]` you will get a
+ * `Fetch[F, Option[A]]`.
+ *
+ * {{{
+ * def maybeGetUser[F[_] : Concurrent](id: UserId): Fetch[F, Option[User]] =
+ *   Fetch.optional(id, Users.source)
+ * }}}
+ *
  * = Data sources that don’t support batching =
  *
- * If your data source doesn’t support batching, you can use the `DataSource#batchingNotSupported` method as the
- * implementation of `fetchMany`. Note that it will use the `fetchOne`
- * implementation for requesting identities one at a time.
+ * If your data source doesn’t support batching, you can simply leave the `batch` method unimplemented.
+ * Note that it will use the `fetch` implementation for requesting identities in parallel.
  * {{{
- * implicit object UnbatchedSource extends DataSource[Int, Int]{
- * override def name = "Unbatched"
+ * object Unbatched extends Data[Int, Int]{
+ *   def name = "Unbatched"
  *
- * override def fetchOne(id: Int): Query[Option[Int]] = {
- * Query.sync(Option(id))
- * }
- * override def fetchMany(ids: NonEmptyList[Int]): Query[Map[Int, Int]] = {
- * batchingNotSupported(ids)
- * }
+ *   def source[F[_] : Concurrent]: DataSource[F, Int, Int] = new DataSource[F, Int, Int]{
+ *     override def data = Unbatched
+ *
+ *     override def CF = Concurrent[F]
+ *
+ *     override def fetch(id: Int): F[Option[Int]] =
+ *       CF.pure(Option(id))
+ *   }
  * }
  * }}}
+ *
+ * = Batching individuals requests sequentially =
+ *
+ * The default `batch` implementation run requests to the data source in parallel, but you can easily
+ * override it. We can make `batch` sequential using `NonEmptyList.traverse` for fetching individual
+ * identities.
+ *
+ * {{{
+ * object UnbatchedSeq extends Data[Int, Int]{
+ *   def name = "UnbatchedSeq"
+ *
+ *   def source[F[_] : Concurrent]: DataSource[F, Int, Int] = new DataSource[F, Int, Int]{
+ *     override def data = UnbatchedSeq
+ *
+ *     override def CF = Concurrent[F]
+ *
+ *     override def fetch(id: Int): F[Option[Int]] =
+ *       CF.pure(Option(id))
+ *
+ *     override def batch(ids: NonEmptyList[Int]): F[Map[Int, Int]] =
+ *       ids.traverse(
+ *         (id) => fetch(id).map(v => (id, v))
+ *       ).map(_.collect { case (i, Some(x)) => (i, x) }.toMap)
+ *   }
+ * }
+ * }}}
+ *
  * = Data sources that only support batching =
  *
- * If your data source only supports querying it in batches, you can implement `fetchOne` in terms of `fetchMany`
- * using `DataSource#batchingOnly`.
+ * If your data source only supports querying it in batches, you can implement `fetch` in terms of `batch`.
  * {{{
- * implicit object OnlyBatchedSource extends DataSource[Int, Int]{
- * override def name = "OnlyBatched"
+ * object OnlyBatched extends Data[Int, Int]{
+ *   def name = "OnlyBatched"
  *
- * override def fetchOne(id: Int): Query[Option[Int]] =
- * batchingOnly(id)
+ *   def source[F[_] : Concurrent]: DataSource[F, Int, Int] = new DataSource[F, Int, Int]{
+ *     override def data = OnlyBatched
  *
- * override def fetchMany(ids: NonEmptyList[Int]): Query[Map[Int, Int]] =
- *Query.sync(ids.toList.map((x) => (x, x)).toMap)
+ *     override def CF = Concurrent[F]
+ *
+ *     override def fetch(id: Int): F[Option[Int]] =
+ *       batch(NonEmptyList(id, List())).map(_.get(id))
+ *
+ *     override def batch(ids: NonEmptyList[Int]): F[Map[Int, Int]] =
+ *       CF.pure(ids.map(x => (x, x)).toList.toMap)
+ *   }
  * }
  * }}}
  *
  * @param name usage
- */
+ **/
 object UsageSection extends FlatSpec with Matchers with Section {
 
   import FetchTutorialHelper._
 
   /**
-   * = Creating and running a fetch
+   * = Creating a runtime =
+   *
+   * Since we’lll use `IO` from the `cats-effect` library to execute our fetches, we’ll need a runtime for
+   * executing our `IO` instances. This includes a `ContextShift[IO]` used for running the `IO` instances and
+   * a `Timer[IO]` that is used for scheduling, let’s go ahead and create them, we’ll use a
+   * `java.util.concurrent.ScheduledThreadPoolExecutor` with a few threads to run our fetches.
+   * {{{
+   * import cats.effect._
+   * import java.util.concurrent._
+   * import scala.concurrent.ExecutionContext
+   * import scala.concurrent.duration._
+   *
+   * val executor = new ScheduledThreadPoolExecutor(4)
+   * val executionContext: ExecutionContext = ExecutionContext.fromExecutor(executor)
+   *
+   * implicit val timer: Timer[IO] = IO.timer(executionContext)
+   * implicit val cs: ContextShift[IO] = IO.contextShift(executionContext)
+   * }}}
+   *
+   * = Creating and running a fetch =
    *
    * We are now ready to create and run fetches. Note the distinction between Fetch creation and execution.
-   * When we are creating and combining `Fetch` values, we are just constructing a recipe of our data
+   * When we are creating `Fetch` values, we are just constructing a recipe of our data
    * dependencies.
    *
    * {{{
-   * val fetchUser: Fetch[User] = getUser(1)
+   * def fetchUser[F[_] : Concurrent]: Fetch[F, User] =
+   *   getUser(1)
    * }}}
    *
-   * A `Fetch` is just a value, and in order to be able to get its value we need to run it to a monad first. The
-   * target monad `M[_]` must be able to lift a `Query[A]` to `M[A]`, evaluating the query in the monad's context.
-   *
-   * We'll run `fetchUser` using `Id` as our target monad, so let's do some imports first. Note that interpreting
-   * a fetch to a non-concurrency monad like `Id` or `Eval` is only recommended for trying things out in a Scala
-   * console, that's why for using them you need to import `fetch.unsafe.implicits`.
-   *
+   * A Fetch is just a value, and in order to be able to get its value we need to run it to an IO first.
    * {{{
-   * import cats.Id
-   * import fetch.unsafe.implicits._
-   * import fetch.syntax._
+   * import cats.effect.IO
+   *
+   * Fetch.run[IO](fetchUser)
    * }}}
    *
-   * Note that running a fetch to non-concurrency monads like `Id` or `Eval` is not supported in Scala.js.
-   * In real-life scenarios you'll want to run your fetches to `Future` or a `Task` type provided by a library like
-   * [[https://monix.io/ Monix]] or [[https://github.com/functional-streams-for-scala/fs2 fs2]], both of which
-   * are supported in Fetch.
-   *
-   * We can now run the fetch and see its result:
-   *
-   * {{{
-   * fetchUser.runA[Id]
-   * }}}
-   *
-   */
+   * We can now run the IO and see its result:
+   **/
   def creatingAndRunning(res0: User) = {
-    val fetchUser: Fetch[User] = getUser(1)
-    fetchUser.runA[Id] shouldBe res0
+    def fetchUser[F[_]: Concurrent]: Fetch[F, User] = getUser(1)
+
+    Fetch.run[IO](fetchUser).unsafeRunSync() shouldBe res0
   }
 
   /**
@@ -228,12 +286,13 @@ object UsageSection extends FlatSpec with Matchers with Section {
    * in two rounds: one for the user with id 1 and another for the user with id 2.
    */
   def sequencing(res0: (User, User)) = {
-    val fetchTwoUsers: Fetch[(User, User)] = for {
-      aUser       <- getUser(1)
-      anotherUser <- getUser(aUser.id + 1)
-    } yield (aUser, anotherUser)
+    def fetchTwoUsers[F[_]: Concurrent]: Fetch[F, (User, User)] =
+      for {
+        aUser       <- getUser(1)
+        anotherUser <- getUser(aUser.id + 1)
+      } yield (aUser, anotherUser)
 
-    val (env, result) = fetchTwoUsers.runF[Id]
+    val (env, result) = Fetch.run[IO](fetchTwoUsers).unsafeRunSync()
 
     result shouldBe res0
   }
@@ -247,14 +306,11 @@ object UsageSection extends FlatSpec with Matchers with Section {
    * the library that those fetches are independent, and thus can be batched if they use the same data source:
    *
    * Both ids (1 and 2) are requested in a single query to the data source when executing the fetch.
-   * {{{
-   * import cats.syntax.cartesian._
-   * }}}
    */
   def batching(res0: (User, User)) = {
-    val fetchProduct: Fetch[(User, User)] = getUser(1).product(getUser(2))
-    //Note how both ids (1 and 2) are requested in a single query to the data source when executing the fetch.
-    fetchProduct.runA[Id] shouldBe res0
+    def fetchProduct[F[_]: Concurrent]: Fetch[F, (User, User)] = (getUser(1), getUser(2)).tupled
+
+    Fetch.run[IO](fetchProduct).unsafeRunSync() shouldBe res0
   }
 
   /**
@@ -265,9 +321,9 @@ object UsageSection extends FlatSpec with Matchers with Section {
    *
    */
   def deduplication(res0: (User, User)) = {
-    val fetchDuped: Fetch[(User, User)] = getUser(1).product(getUser(1))
+    def fetchDuped[F[_]: Concurrent]: Fetch[F, (User, User)] = (getUser(1), getUser(1)).tupled
 
-    fetchDuped.runA[Id] shouldBe res0
+    Fetch.run[IO](fetchDuped).unsafeRunSync() shouldBe res0
   }
 
   /**
@@ -290,12 +346,13 @@ object UsageSection extends FlatSpec with Matchers with Section {
    * source.
    */
   def caching(res0: (User, User)) = {
-    val fetchCached: Fetch[(User, User)] = for {
-      aUser       <- getUser(1)
-      anotherUser <- getUser(1)
-    } yield (aUser, anotherUser)
+    def fetchCached[F[_]: Concurrent]: Fetch[F, (User, User)] =
+      for {
+        aUser       <- getUser(1)
+        anotherUser <- getUser(1)
+      } yield (aUser, anotherUser)
 
-    fetchCached.runA[Id] shouldBe res0
+    Fetch.run[IO](fetchCached).unsafeRunSync() shouldBe res0
   }
 
   /**

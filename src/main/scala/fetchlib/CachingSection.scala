@@ -1,6 +1,7 @@
 /*
- * scala-exercises - exercises-fetch
- * Copyright (C) 2015-2016 47 Degrees, LLC. <http://www.47deg.com>
+ *  scala-exercises - exercises-fetch
+ *  Copyright (C) 2015-2019 47 Degrees, LLC. <http://www.47deg.com>
+ *
  */
 
 package fetchlib
@@ -10,7 +11,6 @@ import cats.instances.list._
 import cats.syntax.traverse._
 import fetch._
 import fetch.syntax._
-import fetch.unsafe.implicits._
 import org.scalaexercises.definitions.Section
 import org.scalatest.{FlatSpec, Matchers}
 
