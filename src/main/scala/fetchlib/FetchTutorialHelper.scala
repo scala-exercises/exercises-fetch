@@ -8,18 +8,15 @@ package fetchlib
 
 import java.util.concurrent.ScheduledThreadPoolExecutor
 
-import scala.language.higherKinds
 import scala.concurrent.ExecutionContext
 import cats.{Applicative, Monad}
-import cats.implicits._
 import cats.data.NonEmptyList
 import cats.effect._
 
 import fetch._
+import cats.implicits._
 
 object FetchTutorialHelper {
-
-  implicit def fetchMonad[F[_]: Concurrent] = fetchM[F]
 
   val executor                           = new ScheduledThreadPoolExecutor(4)
   val executionContext: ExecutionContext = ExecutionContext.fromExecutor(executor)
@@ -63,8 +60,6 @@ object FetchTutorialHelper {
     }
   }
 
-  //Hacer implicit class tipada a F: Monad y a A en el constructor que reciba un Fetch y dentro creamos un flatmap[B]
-  //que reciba una función de A => Fetch[F, B] y llamar a fetchM[F].flatMap
   def getUser[F[_]: Concurrent: Monad](id: UserId): Fetch[F, User] =
     Fetch[F, UserId, User](id, Users.source)
 
@@ -128,26 +123,6 @@ object FetchTutorialHelper {
   def getPostTopic[F[_]: Concurrent](post: Post): Fetch[F, PostTopic] =
     Fetch(post, PostTopics.source)
 
-  //def postsByAuthor[F[_]: Concurrent]: Fetch[F, List[Post]] =
-  //  for {
-  //    posts   <- List(1, 2).traverse(getPost)
-  //    authors <- posts.traverse(getAuthor)
-  //    ordered = (posts zip authors)
-  //      .sortBy({
-  //        case (_, author) =>
-  //          author.username
-  //      })
-  //      .map(_._1)
-  //  } yield ordered
-
-  //val postTopics: Fetch[Map[PostTopic, Int]] = for {
-  //  posts  <- List(2, 3).traverse(getPost)
-  //  topics <- posts.traverse(getPostTopic)
-  //  countByTopic = (posts zip topics).groupBy(_._2).mapValues(_.size)
-  //} yield countByTopic
-
-  //val homePage = (postsByAuthor |@| postTopics).tupled
-
   case class ForgetfulCache[F[_]: Monad]() extends DataCache[F] {
     def insert[I, A](i: I, v: A, d: Data[I, A]): F[DataCache[F]] =
       Applicative[F].pure(this)
@@ -157,45 +132,6 @@ object FetchTutorialHelper {
   }
 
   def forgetfulCache[F[_]: Concurrent] = ForgetfulCache[F]()
-
-  //def queryToTask[A](q: Query[A]): Task[A] = {
-  //  q match {
-  //    case Sync(e) =>
-  //      evalToTask(e)
-  //    case Async(action, timeout) =>
-  //      val task: Task[A] = Task.create((scheduler, callback) => {
-  //        scheduler.execute(new Runnable {
-  //          def run() = action(callback.onSuccess, callback.onError)
-  //        })
-  //
-  //        Cancelable.empty
-  //      })
-  //
-  //      timeout match {
-  //        case finite: FiniteDuration =>
-  //          task.timeout(finite)
-  //        case _ =>
-  //          task
-  //      }
-  //    case Ap(qf, qx) =>
-  //      Task
-  //        .zip2(queryToTask(qf), queryToTask(qx))
-  //        .map({
-  //          case (f, x) =>
-  //            f(x)
-  //        })
-  //  }
-  //}
-
-  //def totalFetched(rounds: Seq[Round]): Int =
-  //  rounds.map((round: Round) => requestFetches(round.request)).toList.sum
-  //
-  //def requestFetches(r: FetchRequest): Int =
-  //  r match {
-  //    case FetchOne(_, _)       => 1
-  //    case FetchMany(ids, _)    => ids.toList.size
-  //    case Concurrent(requests) => requests.toList.map(requestFetches).sum
-  //  }
 
   object BatchedUsers extends Data[UserId, User] {
     def name = "Batched Users"

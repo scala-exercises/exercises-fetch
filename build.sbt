@@ -11,10 +11,8 @@ lazy val fetch = (project in file("."))
     libraryDependencies ++= Seq(
       dep("exercise-compiler"),
       dep("definitions"),
-      %%("cats-core", V.cats),
-      %%("cats-effect", V.cats),
-      %%("fetch", V.fetch),
-      %%("fetch-debug", V.fetch),
+      "com.47deg" %% "fetch"       % V.fetch,
+      "com.47deg" %% "fetch-debug" % V.fetch,
       %%("shapeless", V.shapeless),
       %%("scalatest", V.scalatest),
       %%("scalacheck", V.scalacheck),

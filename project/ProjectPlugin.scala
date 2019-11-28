@@ -42,13 +42,12 @@ object ProjectPlugin extends AutoPlugin {
       orgLicenseSetting := ApacheLicense,
       scalaVersion := V.scala212,
       scalaOrganization := "org.scala-lang",
-      scalacOptions := scalacCommonOptions ++ Seq("-Ypartial-unification"),
       resolvers ++= Seq(
         Resolver.mavenLocal,
         Resolver.sonatypeRepo("snapshots"),
         Resolver.sonatypeRepo("releases")
       ),
-      scalacOptions := sbtorgpolicies.model.scalacCommonOptions,
+      scalacOptions := scalacCommonOptions ++ scalacLanguageOptions ++ Seq("-Ypartial-unification"),
       headerLicense := Some(Custom(s"""| scala-exercises - ${name.value}
                                        | Copyright (C) 2015-2019 47 Degrees, LLC. <http://www.47deg.com>
                                        |

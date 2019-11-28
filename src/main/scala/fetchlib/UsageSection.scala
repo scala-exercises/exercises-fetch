@@ -6,11 +6,9 @@
 
 package fetchlib
 
-import cats._
 import cats.effect._
 import cats.implicits._
 import fetch._
-import fetch.syntax._
 import org.scalaexercises.definitions.Section
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -293,9 +291,7 @@ object UsageSection extends FlatSpec with Matchers with Section {
         anotherUser <- getUser(aUser.id + 1)
       } yield (aUser, anotherUser)
 
-    val (env, result) = Fetch.run[IO](fetchTwoUsers).unsafeRunSync()
-
-    result shouldBe res0
+    Fetch.run[IO](fetchTwoUsers).unsafeRunSync() shouldBe res0
   }
 
   /**

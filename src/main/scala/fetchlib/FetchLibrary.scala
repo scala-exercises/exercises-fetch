@@ -28,8 +28,7 @@ object FetchLibrary extends Library {
       BatchingSection,
       ErrorHandlingSection,
       SyntaxSection,
-      CatsSection,
-      ConcurrencyMonadsSection
+      DebuggingSection
     )
 
 }

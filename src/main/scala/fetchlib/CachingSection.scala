@@ -6,10 +6,8 @@
 
 package fetchlib
 
-import cats._
 import cats.effect.{Concurrent, IO}
-import cats.instances.list._
-import cats.syntax.traverse._
+import cats.implicits._
 import fetch._
 import org.scalaexercises.definitions.Section
 import org.scalatest.{FlatSpec, Matchers}
@@ -123,14 +121,14 @@ object CachingSection extends FlatSpec with Matchers with Section {
    *
    * We can now use our implementation of the cache when running a fetch.
    */
-  def customCache(res0: Int) = {
+  def customCache(res0: User) = {
     def fetchSameTwice[F[_]: Concurrent]: Fetch[F, (User, User)] =
       for {
         one     <- getUser(1)
         another <- getUser(1)
       } yield (one, another)
 
-    Fetch.run[IO](fetchSameTwice, forgetfulCache).unsafeRunSync() shouldBe res0
+    Fetch.run[IO](fetchSameTwice, forgetfulCache).unsafeRunSync()._1 shouldBe res0
   }
 
 }
