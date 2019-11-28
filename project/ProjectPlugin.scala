@@ -42,7 +42,7 @@ object ProjectPlugin extends AutoPlugin {
       orgLicenseSetting := ApacheLicense,
       scalaVersion := V.scala212,
       scalaOrganization := "org.scala-lang",
-      scalacOptions += "-Ypartial-unification",
+      scalacOptions := scalacCommonOptions ++ Seq("-Ypartial-unification"),
       resolvers ++= Seq(
         Resolver.mavenLocal,
         Resolver.sonatypeRepo("snapshots"),

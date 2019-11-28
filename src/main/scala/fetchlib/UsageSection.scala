@@ -10,6 +10,7 @@ import cats._
 import cats.effect._
 import cats.implicits._
 import fetch._
+import fetch.syntax._
 import org.scalaexercises.definitions.Section
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -356,44 +357,6 @@ object UsageSection extends FlatSpec with Matchers with Section {
   }
 
   /**
-   * = Queries =
-   *
-   * Queries are a way of separating the computation required to read a piece of data from the context in
-   * which is run. Let's look at the various ways we have of constructing queries.
-   *
-   * = Synchronous =
-   *
-   * A query can be synchronous, and we may want to evaluate it when `fetchOne` and `fetchMany`
-   * are called. We can do so with `Query#sync`:
-   * {{{
-   *     Query.sync(42)
-   * }}}
-   *
-   *
-   * {{{
-   *Query.sync({ println("Computing 42"); 42 })
-   * }}}
-   * Synchronous queries simply wrap a Cats’ `Eval` instance, which captures the
-   * notion of a lazy synchronous computation.
-   * You can lift an `Eval[A]` into a `Query[A]` too:
-   * {{{
-   * import cats.Eval
-   *Query.eval(Eval.always({ println("Computing 42"); 42 }))
-   * }}}
-   *
-   * = Asynchronous =
-   *
-   * Asynchronous queries are constructed passing a function that accepts a callback (`A => Unit`) and an errback
-   * (`Throwable => Unit`) and performs the asynchronous computation. Note that you must ensure that either the
-   * callback or the errback are called.
-   * {{{
-   * def asynchronous(res0: Boolean) = {
-   * Query.async((ok: (Int => Unit), fail) => {
-   * Thread.sleep(100)
-   * ok(42)
-   * })
-   * }
-   * }}}
    * = Combining data from multiple sources =
    *
    * Now that we know about some of the optimizations that Fetch can perform to read data efficiently,
@@ -412,31 +375,29 @@ object UsageSection extends FlatSpec with Matchers with Section {
    *
    * {{{
    * val postDatabase: Map[PostId, Post] = Map(
-   * 1 -> Post(1, 2, "An article"),
-   * 2 -> Post(2, 3, "Another article"),
-   * 3 -> Post(3, 4, "Yet another article")
+   *   1 -> Post(1, 2, "An article"),
+   *   2 -> Post(2, 3, "Another article"),
+   *   3 -> Post(3, 4, "Yet another article")
    * )
    *
-   * implicit object PostSource extends DataSource[PostId, Post]{
-   * override def fetchOne(id: PostId): Query[Option[Post]] = {
-   * Query.sync({
-   * latency(postDatabase.get(id), s"One Post $id")
-   * })
-   * }
-   * override def fetchMany(ids: NonEmptyList[PostId]): Query[Map[PostId, Post]] = {
-   * Query.sync({
-   * latency(postDatabase.filterKeys(ids.toList.contains), s"Many Posts $ids")
-   * })
-   * }
+   * object Posts extends Data[PostId, Post] {
+   *   def name = "Posts"
+   *
+   *   def source[F[_] : Concurrent]: DataSource[F, PostId, Post] = new DataSource[F, PostId, Post] {
+   *     override def data = Posts
+   *
+   *     override def CF = Concurrent[F]
+   *
+   *     override def fetch(id: PostId): F[Option[Post]] =
+   *       latency[F](s"One Post $id") >> CF.pure(postDatabase.get(id))
+   *
+   *     override def batch(ids: NonEmptyList[PostId]): F[Map[PostId, Post]] =
+   *       latency[F](s"Batch Posts $ids") >> CF.pure(postDatabase.filterKeys(ids.toList.toSet).toMap)
+   *   }
    * }
    *
-   * def getPost(id: PostId): Fetch[Post] = Fetch(id)
-   * }}}
-   *
-   * We can also implement a function for fetching a post's author given a post:
-   *
-   * {{{
-   * def getAuthor(p: Post): Fetch[User] = Fetch(p.author)
+   * def getPost[F[_] : Concurrent](id: PostId): Fetch[F, Post] =
+   *   Fetch(id, Posts.source)
    * }}}
    *
    * Apart from posts, we are going to add another data source: one for post topics.
@@ -448,23 +409,28 @@ object UsageSection extends FlatSpec with Matchers with Section {
    * We'll implement a data source for retrieving a post topic given a post id.
    *
    * {{{
-   * implicit object PostTopicSource extends DataSource[Post, PostTopic]{
-   * override def name = "Post topic"
-   * override def fetchOne(id: Post): Query[Option[PostTopic]] = {
-   * Query.sync({
-   * val topic = if (id.id % 2 == 0) "monad" else "applicative"
-   * Option(topic)
-   * })
-   * }
-   * override def fetchMany(ids: NonEmptyList[Post]): Query[Map[Post, PostTopic]] = {
-   * Query.sync({
-   * val result = ids.toList.map(id => (id, if (id.id % 2 == 0) "monad" else "applicative")).toMap
-   * result
-   * })
-   * }
+   * object PostTopics extends Data[Post, PostTopic] {
+   *   def name = "Post Topics"
+   *
+   *   def source[F[_] : Concurrent]: DataSource[F, Post, PostTopic] = new DataSource[F, Post, PostTopic] {
+   *     override def data = PostTopics
+   *
+   *     override def CF = Concurrent[F]
+   *
+   *     override def fetch(id: Post): F[Option[PostTopic]] = {
+   *       val topic = if (id.id % 2 == 0) "monad" else "applicative"
+   *       latency[F](s"One Post Topic $id") >> CF.pure(Option(topic))
+   *     }
+   *
+   *     override def batch(ids: NonEmptyList[Post]): F[Map[Post, PostTopic]] = {
+   *       val result = ids.toList.map(id => (id, if (id.id % 2 == 0) "monad" else "applicative")).toMap
+   *       latency[F](s"Batch Post Topics $ids") >> CF.pure(result)
+   *     }
+   *   }
    * }
    *
-   * def getPostTopic(post: Post): Fetch[PostTopic] = Fetch(post)
+   * def getPostTopic[F[_] : Concurrent](post: Post): Fetch[F, PostTopic] =
+   *   Fetch(post, PostTopics.source)
    * }}}
    *
    * Now that we have multiple sources let's mix them in the same fetch.
@@ -474,53 +440,19 @@ object UsageSection extends FlatSpec with Matchers with Section {
    *
    */
   def combiningData(res0: (Post, PostTopic)) = {
-    val fetchMulti: Fetch[(Post, PostTopic)] = for {
-      post  <- getPost(1)
-      topic <- getPostTopic(post)
-    } yield (post, topic)
+    def fetchMulti[F[_]: Concurrent]: Fetch[F, (Post, PostTopic)] =
+      for {
+        post  <- getPost(1)
+        topic <- getPostTopic(post)
+      } yield (post, topic)
 
-    fetchMulti.runA[Id] shouldBe res0
+    Fetch.run[IO](fetchMulti).unsafeRunSync() shouldBe res0
   }
 
   /**
-   * = Concurrency =
-   *
-   * Combining multiple independent requests to the same data source can have two outcomes:
-   *
-   * - if the data sources are the same, the request is batched
-   * - otherwise, both data sources are queried at the same time
-   *
-   * The below example combines data from two different sources, and the library knows they are independent.
-   */
-  def concurrency(res0: (Post, User)) = {
-    val fetchConcurrent: Fetch[(Post, User)] = getPost(1).product(getUser(2))
-
-    fetchConcurrent.runA[Id] shouldBe res0
-
-  }
-
-  /**
-   * Since we are running the fetch to `Id`, we couldn’t exploit parallelism
-   * for reading from both sources at the same time.
-   * Let’s do some imports in order to be able to run fetches to a `Future`.
-   * {{{
-   * import scala.concurrent._
-   * import ExecutionContext.Implicits.global
-   * import scala.concurrent.duration._
-   * }}}
-   * Let’s see what happens when running the same fetch to a `Future`,
-   * note that you cannot block for a future’s result in Scala.js.
-   * {{{
-   * import fetch.implicits._
-   *
-   * Await.result(fetchConcurrent.runA[Future], Duration.Inf)
-   * res: (Post, User) = (Post(1,2,An article),User(2,@two))
-   * }}}
-   * As you can see, each independent request ran in its own logical thread.
-   *
    * = Combinators =
    *
-   * Besides `flatMap` for sequencing fetches and `product` for running them concurrently,
+   * Besides `flatMap` for sequencing fetches and products for running them concurrently,
    * Fetch provides a number of other combinators.
    *
    * = Sequence =
@@ -539,8 +471,10 @@ object UsageSection extends FlatSpec with Matchers with Section {
    * }}}
    */
   def sequence(res0: List[User]) = {
-    val fetchSequence: Fetch[List[User]] = List(getUser(1), getUser(2), getUser(3)).sequence
-    fetchSequence.runA[Id] shouldBe res0
+    def fetchSequence[F[_]: Concurrent]: Fetch[F, List[User]] =
+      List(getUser(1), getUser(2), getUser(3)).sequence
+
+    Fetch.run[IO](fetchSequence).unsafeRunSync() shouldBe res0
   }
 
   /**
@@ -549,11 +483,12 @@ object UsageSection extends FlatSpec with Matchers with Section {
    * Another interesting combinator is `traverse`, which is the composition of `map` and `sequence`.
    *
    * All the optimizations made by `sequence` still apply when using `traverse`.
-   *
    */
   def traverse(res0: List[User]) = {
-    val fetchTraverse: Fetch[List[User]] = List(1, 2, 3).traverse(getUser)
-    fetchTraverse.runA[Id] shouldBe res0
+    def fetchTraverse[F[_]: Concurrent]: Fetch[F, List[User]] =
+      List(1, 2, 3).traverse(getUser[F])
+
+    Fetch.run[IO](fetchTraverse).unsafeRunSync() shouldBe res0
   }
 
 }

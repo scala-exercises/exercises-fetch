@@ -11,12 +11,15 @@ import java.util.concurrent.ScheduledThreadPoolExecutor
 import scala.language.higherKinds
 import scala.concurrent.ExecutionContext
 import cats.{Applicative, Monad}
+import cats.implicits._
 import cats.data.NonEmptyList
 import cats.effect._
-import cats.implicits._
+
 import fetch._
 
 object FetchTutorialHelper {
+
+  implicit def fetchMonad[F[_]: Concurrent] = fetchM[F]
 
   val executor                           = new ScheduledThreadPoolExecutor(4)
   val executionContext: ExecutionContext = ExecutionContext.fromExecutor(executor)
@@ -44,7 +47,7 @@ object FetchTutorialHelper {
 
   def fetchException[F[_]: Concurrent]: Fetch[F, User] = Fetch.error(new Exception("Oh noes"))
 
-  implicit object Users extends Data[UserId, User] {
+  object Users extends Data[UserId, User] {
     def name = "Users"
 
     def source[F[_]: Concurrent]: DataSource[F, UserId, User] = new DataSource[F, UserId, User] {
@@ -60,7 +63,10 @@ object FetchTutorialHelper {
     }
   }
 
-  def getUser[F[_]: Concurrent](id: UserId): Fetch[F, User] = Fetch(id, Users.source)
+  //Hacer implicit class tipada a F: Monad y a A en el constructor que reciba un Fetch y dentro creamos un flatmap[B]
+  //que reciba una función de A => Fetch[F, B] y llamar a fetchM[F].flatMap
+  def getUser[F[_]: Concurrent: Monad](id: UserId): Fetch[F, User] =
+    Fetch[F, UserId, User](id, Users.source)
 
   def cache[F[_]: Concurrent] = InMemoryCache.from[F, UserId, User](
     (Users, 1) -> User(1, "@dialelo")
@@ -76,7 +82,7 @@ object FetchTutorialHelper {
     3 -> Post(3, 4, "Yet another article")
   )
 
-  implicit object Posts extends Data[PostId, Post] {
+  object Posts extends Data[PostId, Post] {
     def name = "Posts"
 
     def source[F[_]: Concurrent]: DataSource[F, PostId, Post] = new DataSource[F, PostId, Post] {
@@ -97,7 +103,7 @@ object FetchTutorialHelper {
 
   type PostTopic = String
 
-  implicit object PostTopics extends Data[Post, PostTopic] {
+  object PostTopics extends Data[Post, PostTopic] {
     def name = "Post Topics"
 
     def source[F[_]: Concurrent]: DataSource[F, Post, PostTopic] =
@@ -234,12 +240,13 @@ object FetchTutorialHelper {
   def getSequentialUser[F[_]: Concurrent](id: Int): Fetch[F, User] =
     Fetch(id, SequentialUsers.source)
 
-  def failingFetch[F[_]: Concurrent]: Fetch[F, String] =
+  def failingFetch[F[_]: Concurrent: Monad]: Fetch[F, String] = {
     for {
       a <- getUser(1)
       b <- getUser(2)
       c <- fetchException
     } yield s"${a.username} loves ${b.username}"
+  }
 
   val result: IO[Either[Throwable, (Log, String)]] = Fetch.runLog[IO](failingFetch).attempt
 
