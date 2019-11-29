@@ -1,16 +1,14 @@
 /*
- * scala-exercises - exercises-fetch
- * Copyright (C) 2015-2016 47 Degrees, LLC. <http://www.47deg.com>
+ *  scala-exercises - exercises-fetch
+ *  Copyright (C) 2015-2019 47 Degrees, LLC. <http://www.47deg.com>
+ *
  */
 
 package fetchlib
 
-import cats._
-import cats.instances.list._
-import cats.syntax.traverse._
+import cats.effect.{Concurrent, IO}
+import cats.implicits._
 import fetch._
-import fetch.syntax._
-import fetch.unsafe.implicits._
 import org.scalaexercises.definitions.Section
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -37,98 +35,100 @@ object CachingSection extends FlatSpec with Matchers with Section {
    *
    */
   def prepopulating(res0: Int, res1: String) = {
-    val fetchUser: Fetch[User] = getUser(1)
-    val cache                  = InMemoryCache(UserSource.identity(1) -> User(1, "@one"))
-    Fetch.run[Id](fetchUser, cache) shouldBe User(res0, res1)
+    def fetchUser[F[_]: Concurrent]: Fetch[F, User] = getUser(1)
+
+    def cache[F[_]: Concurrent] = InMemoryCache.from[F, UserId, User]((Users, 1) -> User(1, "@one"))
+
+    Fetch.run[IO](fetchUser, cache).unsafeRunSync() shouldBe User(res0, res1)
   }
 
   /**
-   * And as the first when using fetch syntax:
-   * {{{
-   *fetchUser.runA[Id](cache)
-   * res: cats.Id[User] = User(1,@one)
-   * }}}
    * As you can see, when all the data is cached, no query to the data sources is executed since the results are
-   *
    * available in the cache.
    *
    * If only part of the data is cached, the cached data won't be asked for:
    *
    */
   def cachePartialHits(res0: String, res1: String) = {
+    def fetchUser[F[_]: Concurrent]: Fetch[F, User] = getUser(1)
 
-    val fetchUser: Fetch[User]            = getUser(1)
-    val cache                             = InMemoryCache(UserSource.identity(1) -> User(1, "@dialelo"))
-    val fetchManyUsers: Fetch[List[User]] = List(1, 2, 3).traverse(getUser)
-    fetchManyUsers.runA[Id].head.username shouldBe res0
-    Fetch.run[Id](fetchUser, cache).username shouldBe res1
+    def cache[F[_]: Concurrent] =
+      InMemoryCache.from[F, UserId, User]((Users, 1) -> User(1, "@dialelo"))
+
+    def fetchManyUsers[F[_]: Concurrent]: Fetch[F, List[User]] =
+      List(1, 2, 3).traverse(getUser[F])
+
+    Fetch.run[IO](fetchManyUsers).unsafeRunSync().head.username shouldBe res0
+    Fetch.run[IO](fetchUser, cache).unsafeRunSync().username shouldBe res1
   }
 
   /**
    * = Replaying a fetch without querying any data source =
    *
-   * When running a fetch, we are generally interested in its final result.
-   * However, we also have access to the cache and information about the executed rounds once we run a fetch.
-   * Fetch’s interpreter keeps its state in an environment (implementing the `Env` trait),
-   * and we can get both the environment and result after running a fetch using `Fetch.runFetch` instead of `Fetch.run`
-   * or `value.runF` via it’s implicit syntax.
+   * When running a fetch, we are generally interested in its final result. However, we also have access to the
+   * cache once we run a fetch. We can get both the cache and the result using `Fetch.runCache` instead of `Fetch.run`.
    *
    * Knowing this, we can replay a fetch reusing the cache of a previous one. The replayed fetch won't have to call
    * any of the data sources.
-   *
    */
   def replaying(res0: Int, res1: Int) = {
-    def fetchUsers = List(1, 2, 3).traverse(getUser)
+    def fetchUsers[F[_]: Concurrent]: Fetch[F, List[User]] = List(1, 2, 3).traverse(getUser[F])
 
-    val firstEnv = fetchUsers.runE[Id]
+    val (populatedCache, result1) = Fetch.runCache[IO](fetchUsers).unsafeRunSync()
 
-    firstEnv.rounds.size shouldBe res0
+    result1.size shouldBe res0
 
-    val secondEnv = fetchUsers.runE[Id](firstEnv.cache)
+    val secondEnv = Fetch.run[IO](fetchUsers, populatedCache).unsafeRunSync()
 
-    secondEnv.rounds.size shouldBe res1
+    secondEnv.size shouldBe res1
   }
 
   /**
    *
    * = Implementing a custom cache =
    *
-   * The default cache is implemented as an immutable in-memory map,
-   * but users are free to use their own caches when running a fetch.
-   * Your cache should implement the `DataSourceCache` trait,
-   * and after that you can pass it to Fetch's `run` methods.
+   * The default cache is implemented as an immutable in-memory map, but users are free to use their own caches
+   * when running a fetch. Your cache should implement the `DataCache` trait, and after that you can pass it to
+   * Fetch’s `run` methods.
    *
    * There is no need for the cache to be mutable since fetch
    * executions run in an interpreter that uses the state monad.
-   * Note that the `update` method in the `DataSourceCache` trait
+   * Note that the `update` method in the `DataCache` trait
    * yields a new, updated cache.
    *
    * {{{
-   * trait DataSourceCache {
-   * def update[A](k: DataSourceIdentity, v: A): DataSourceCache
-   * def get[A](k: DataSourceIdentity): Option[A]
+   * trait DataCache[F[_]] {
+   *   def insert[I, A](i: I, v: A, d: Data[I, A]): F[DataCache[F]]
+   *   def lookup[I, A](i: I, d: Data[I, A]): F[Option[A]]
    * }
    * }}}
    *
    * Let's implement a cache that forgets everything we store in it.
    *
    * {{{
-   * final case class ForgetfulCache() extends DataSourceCache {
-   * override def get[A](k: DataSourceIdentity): Option[A] = None
-   * override def update[A](k: DataSourceIdentity, v: A): ForgetfulCache = this
+   * import cats.{Applicative, Monad}
+   *
+   * case class ForgetfulCache[F[_] : Monad]() extends DataCache[F] {
+   *   def insert[I, A](i: I, v: A, d: Data[I, A]): F[DataCache[F]] =
+   *     Applicative[F].pure(this)
+   *
+   *   def lookup[I, A](i: I, ds: Data[I, A]): F[Option[A]] =
+   *     Applicative[F].pure(None)
    * }
+   *
+   * def forgetfulCache[F[_] : Concurrent] = ForgetfulCache[F]()
    * }}}
    *
    * We can now use our implementation of the cache when running a fetch.
    */
-  def customCache(res0: Int) = {
+  def customCache(res0: User) = {
+    def fetchSameTwice[F[_]: Concurrent]: Fetch[F, (User, User)] =
+      for {
+        one     <- getUser(1)
+        another <- getUser(1)
+      } yield (one, another)
 
-    val fetchSameTwice: Fetch[(User, User)] = for {
-      one     <- getUser(1)
-      another <- getUser(1)
-    } yield (one, another)
-    val env = fetchSameTwice.runE[Id](ForgetfulCache())
-    env.rounds.size shouldBe res0
+    Fetch.run[IO](fetchSameTwice, forgetfulCache).unsafeRunSync()._1 shouldBe res0
   }
 
 }

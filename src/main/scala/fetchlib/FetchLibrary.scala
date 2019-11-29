@@ -1,6 +1,7 @@
 /*
- * scala-exercises - exercises-fetch
- * Copyright (C) 2015-2016 47 Degrees, LLC. <http://www.47deg.com>
+ *  scala-exercises - exercises-fetch
+ *  Copyright (C) 2015-2019 47 Degrees, LLC. <http://www.47deg.com>
+ *
  */
 
 package fetchlib
@@ -27,8 +28,7 @@ object FetchLibrary extends Library {
       BatchingSection,
       ErrorHandlingSection,
       SyntaxSection,
-      CatsSection,
-      ConcurrencyMonadsSection
+      DebuggingSection
     )
 
 }

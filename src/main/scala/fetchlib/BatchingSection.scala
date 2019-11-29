@@ -1,18 +1,16 @@
 /*
- * scala-exercises - exercises-fetch
- * Copyright (C) 2015-2016 47 Degrees, LLC. <http://www.47deg.com>
+ *  scala-exercises - exercises-fetch
+ *  Copyright (C) 2015-2019 47 Degrees, LLC. <http://www.47deg.com>
+ *
  */
 
 package fetchlib
 
-import cats._
-import cats.instances.list._
-import cats.syntax.traverse._
+import cats.effect._
+import cats.implicits._
 import fetch._
-import fetch.syntax._
-import fetch.unsafe.implicits._
 import org.scalaexercises.definitions.Section
-import org.scalatest.{Assertion, FlatSpec, Matchers}
+import org.scalatest.{FlatSpec, Matchers}
 
 /**
  * = Batching =
@@ -35,34 +33,36 @@ object BatchingSection extends FlatSpec with Matchers with Section {
    * let’s try it out:
    *
    * {{{
+   * object BatchedUsers extends Data[UserId, User]{
+   *   def name = "Batched Users"
    *
-   * implicit object BatchedUserSource extends DataSource[UserId, User]{
-   * override def name = "BatchedUser"
+   *   def source[F[_] : Concurrent]: DataSource[F, UserId, User] = new DataSource[F, UserId, User] {
+   *     override def data = BatchedUsers
    *
-   * override def maxBatchSize: Option[Int] = Some(2)
+   *     override def CF = Concurrent[F]
    *
-   * override def fetchOne(id: UserId): Query[Option[User]] = {
-   *       Query.sync({
-   * latency(userDatabase.get(id), s"One User $id")
-   * })
+   *     override def maxBatchSize: Option[Int] = Some(2)
+   *
+   *     override def fetch(id: UserId): F[Option[User]] =
+   *       latency[F](s"One User $id") >> CF.pure(userDatabase.get(id))
+   *
+   *     override def batch(ids: NonEmptyList[UserId]): F[Map[UserId, User]] =
+   *       latency[F](s"Batch Users $ids") >> CF.pure(userDatabase.filterKeys(ids.toList.toSet).toMap)
+   *   }
    * }
-   * override def fetchMany(ids: NonEmptyList[UserId]): Query[Map[UserId, User]] = {
-   *       Query.sync({
-   * latency(userDatabase.filterKeys(ids.toList.contains), s"Many Users $ids")
-   * })
-   * }
-   * }
    *
-   * def getBatchedUser(id: Int): Fetch[User] = Fetch(id)(BatchedUserSource)
-   *
+   * def getBatchedUser[F[_] : Concurrent](id: Int): Fetch[F, User] =
+   *   Fetch(id, BatchedUsers.source)
    * }}}
    *
    * We have defined the maximum batch size to be 2,
    * let’s see what happens when running a fetch that needs more than two users:
    */
   def maximumSize(res0: Int) = {
-    val fetchManyBatchedUsers: Fetch[List[User]] = List(1, 2, 3, 4).traverse(getBatchedUser)
-    fetchManyBatchedUsers.runE[Id].rounds.size shouldBe res0
+    def fetchManyBatchedUsers[F[_]: Concurrent]: Fetch[F, List[User]] =
+      List(1, 2, 3, 4).traverse(getBatchedUser[F])
+
+    Fetch.run[IO](fetchManyBatchedUsers).unsafeRunSync().size shouldBe res0
   }
 
   /**
@@ -73,28 +73,27 @@ object BatchingSection extends FlatSpec with Matchers with Section {
    * but you can tweak it by overriding `DataSource#batchExection`.
    *
    * {{{
+   * object SequentialUsers extends Data[UserId, User]{
+   *   def name = "Sequential Users"
    *
-   * implicit object SequentialUserSource extends DataSource[UserId, User]{
-   * override def name = "SequentialUser"
+   *   def source[F[_] : Concurrent]: DataSource[F, UserId, User] = new DataSource[F, UserId, User] {
+   *     override def data = SequentialUsers
    *
-   * override def maxBatchSize: Option[Int] = Some(2)
+   *     override def CF = Concurrent[F]
    *
-   * override def batchExecution: ExecutionType = Sequential
+   *     override def maxBatchSize: Option[Int] = Some(2)
+   *     override def batchExecution: BatchExecution = Sequentially // defaults to `InParallel`
    *
-   * override def fetchOne(id: UserId): Query[Option[User]] = {
-   *       Query.sync({
-   * latency(userDatabase.get(id), s"One User $id")
-   * })
+   *     override def fetch(id: UserId): F[Option[User]] =
+   *       latency[F](s"One User $id") >> CF.pure(userDatabase.get(id))
+   *
+   *     override def batch(ids: NonEmptyList[UserId]): F[Map[UserId, User]] =
+   *       latency[F](s"Batch Users $ids") >> CF.pure(userDatabase.filterKeys(ids.toList.toSet).toMap)
+   *   }
    * }
-   * override def fetchMany(ids: NonEmptyList[UserId]): Query[Map[UserId, User]] = {
-   *       Query.sync({
-   * latency(userDatabase.filterKeys(ids.toList.contains), s"Many Users $ids")
-   * })
-   * }
-   * }
    *
-   * def getSequentialUser(id: Int): Fetch[User] = Fetch(id)(SequentialUserSource)
-   *
+   * def getSequentialUser[F[_] : Concurrent](id: Int): Fetch[F, User] =
+   *   Fetch(id, SequentialUsers.source)
    * }}}
    *
    * We have defined the maximum batch size to be 2 and the batch execution to be sequential,
@@ -102,7 +101,9 @@ object BatchingSection extends FlatSpec with Matchers with Section {
    *
    */
   def executionStrategy(res0: Int) = {
-    val fetchManySeqBatchedUsers: Fetch[List[User]] = List(1, 2, 3, 4).traverse(getSequentialUser)
-    fetchManySeqBatchedUsers.runE[Id].rounds.size shouldBe res0
+    def fetchManySeqBatchedUsers[F[_]: Concurrent]: Fetch[F, List[User]] =
+      List(1, 2, 3, 4).traverse(getSequentialUser[F])
+
+    Fetch.run[IO](fetchManySeqBatchedUsers).unsafeRunSync().size shouldBe res0
   }
 }
