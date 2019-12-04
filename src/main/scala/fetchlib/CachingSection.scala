@@ -10,7 +10,8 @@ import cats.effect.{Concurrent, IO}
 import cats.implicits._
 import fetch._
 import org.scalaexercises.definitions.Section
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 /**
  * = Caching =
@@ -21,7 +22,7 @@ import org.scalatest.{FlatSpec, Matchers}
  *
  * @param name caching
  */
-object CachingSection extends FlatSpec with Matchers with Section {
+object CachingSection extends AnyFlatSpec with Matchers with Section {
 
   import FetchTutorialHelper._
 

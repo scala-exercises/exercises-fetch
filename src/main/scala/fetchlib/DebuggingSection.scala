@@ -10,7 +10,8 @@ import cats.effect._
 import cats.implicits._
 import fetch._
 import org.scalaexercises.definitions.Section
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 /**
  * = Debugging =
@@ -25,7 +26,7 @@ import org.scalatest.{FlatSpec, Matchers}
  *
  * @param name Debugging
  */
-object DebuggingSection extends FlatSpec with Matchers with Section {
+object DebuggingSection extends AnyFlatSpec with Matchers with Section {
 
   import FetchTutorialHelper._
 
