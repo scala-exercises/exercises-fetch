@@ -19,9 +19,9 @@ import org.scalatest.matchers.should.Matchers
  * Fetch is used for reading data from remote sources and the queries we perform can and will fail at some point.
  * There are many things that can go wrong:
  *
- * - an exception can be thrown by client code of certain data sources
- * - an identity may be missing
- * - the data source may be temporarily available
+ *  - an exception can be thrown by client code of certain data sources
+ *  - an identity may be missing
+ *  - the data source may be temporarily available
  *
  * Since the error cases are plenty and can’t be anticipated Fetch errors are represented by the 'FetchException'
  * trait, which extends `Throwable`.
