@@ -18,8 +18,9 @@ import cats.implicits._
 
 object FetchTutorialHelper {
 
-  val executor                           = new ScheduledThreadPoolExecutor(4)
-  val executionContext: ExecutionContext = ExecutionContext.fromExecutor(executor)
+  val executor = new ScheduledThreadPoolExecutor(4)
+  val executionContext: ExecutionContext =
+    ExecutionContext.fromExecutor(new java.util.concurrent.ForkJoinPool(2))
 
   implicit val timer: Timer[IO]     = IO.timer(executionContext)
   implicit val cs: ContextShift[IO] = IO.contextShift(executionContext)

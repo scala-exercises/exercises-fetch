@@ -92,7 +92,7 @@ import org.scalatest.matchers.should.Matchers
  *
  * = Writing your first data source =
  *
- * Now that we know about the DataSource` typeclass, let's write our first data source! We'll start by
+ * Now that we know about the `DataSource` typeclass, let's write our first data source! We'll start by
  * implementing a data source for fetching users given their id.
  * The first thing we'll do is define the types for user ids and users.
  *
