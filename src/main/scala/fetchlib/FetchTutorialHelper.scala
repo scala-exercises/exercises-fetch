@@ -18,8 +18,9 @@ import cats.implicits._
 
 object FetchTutorialHelper {
 
-  val executor                           = new ScheduledThreadPoolExecutor(4)
-  val executionContext: ExecutionContext = ExecutionContext.fromExecutor(executor)
+  val executor = new ScheduledThreadPoolExecutor(4)
+  val executionContext: ExecutionContext =
+    ExecutionContext.fromExecutor(new java.util.concurrent.ForkJoinPool(2))
 
   implicit val timer: Timer[IO]     = IO.timer(executionContext)
   implicit val cs: ContextShift[IO] = IO.contextShift(executionContext)
@@ -56,7 +57,8 @@ object FetchTutorialHelper {
         latency[F](s"One User $id") >> CF.pure(userDatabase.get(id))
 
       override def batch(ids: NonEmptyList[UserId]): F[Map[UserId, User]] =
-        latency[F](s"Batch Users $ids") >> CF.pure(userDatabase.filterKeys(ids.toList.toSet))
+        latency[F](s"Batch Users $ids") >> CF.pure(
+          userDatabase.view.filterKeys(ids.toList.toSet).toMap)
     }
   }
 
@@ -89,7 +91,8 @@ object FetchTutorialHelper {
         latency[F](s"One Post $id") >> CF.pure(postDatabase.get(id))
 
       override def batch(ids: NonEmptyList[PostId]): F[Map[PostId, Post]] =
-        latency[F](s"Batch Posts $ids") >> CF.pure(postDatabase.filterKeys(ids.toList.toSet))
+        latency[F](s"Batch Posts $ids") >> CF.pure(
+          postDatabase.view.filterKeys(ids.toList.toSet).toMap)
     }
   }
 
@@ -147,7 +150,8 @@ object FetchTutorialHelper {
         latency[F](s"One User $id") >> CF.pure(userDatabase.get(id))
 
       override def batch(ids: NonEmptyList[UserId]): F[Map[UserId, User]] =
-        latency[F](s"Batch Users $ids") >> CF.pure(userDatabase.filterKeys(ids.toList.toSet))
+        latency[F](s"Batch Users $ids") >> CF.pure(
+          userDatabase.view.filterKeys(ids.toList.toSet).toMap)
     }
   }
 
@@ -169,7 +173,8 @@ object FetchTutorialHelper {
         latency[F](s"One User $id") >> CF.pure(userDatabase.get(id))
 
       override def batch(ids: NonEmptyList[UserId]): F[Map[UserId, User]] =
-        latency[F](s"Batch Users $ids") >> CF.pure(userDatabase.filterKeys(ids.toList.toSet))
+        latency[F](s"Batch Users $ids") >> CF.pure(
+          userDatabase.view.filterKeys(ids.toList.toSet).toMap)
     }
   }
 
