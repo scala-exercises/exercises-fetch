@@ -27,24 +27,30 @@ import org.scalatest.matchers.should.Matchers
  *
  * If we are just reading data, we can make a series of optimizations such as:
  *
- * - batching requests to the same data source
- * - requesting independent data from different sources in parallel
- * - caching previously seen results
+ *  - batching requests to the same data source
+ *  - requesting independent data from different sources in parallel
+ *  - caching previously seen results
  *
  * However, if we mix these optimizations with the code that fetches the data
  * we may end up trading clarity for performance. Furthermore, we are
  * mixing low-level (optimization) and high-level (business logic with the data
  * we read) concerns.
+ *
  * = Installation =
- *To begin, add the following dependency to your SBT build file:
- *{{{
- *"com.47deg" %% "fetch" % "1.2.1"
- *}}}
- *Or, if using Scala.js:
- *{{{
- *"com.47deg" %%% "fetch" % "1.2.1"
- *}}}
- *Now you’ll have Fetch available in both Scala and Scala.js.
+ *
+ * To begin, add the following dependency to your SBT build file:
+ *
+ * {{{
+ * "com.47deg" %% "fetch" % "1.2.1"
+ * }}}
+ *
+ * Or, if using Scala.js:
+ *
+ * {{{
+ * "com.47deg" %%% "fetch" % "1.2.1"
+ * }}}
+ *
+ * Now you’ll have Fetch available in both Scala and Scala.js.
  *
  * = Usage =
  *
@@ -68,8 +74,8 @@ import org.scalatest.matchers.should.Matchers
  *
  * It takes two type parameters:
  *
- * - `Identity`: the identity we want to fetch (a `UserId` if we were fetching users)
- * - `Result`: the type of the data we retrieve (a `User` if we were fetching users)
+ *  - `Identity`: the identity we want to fetch (a `UserId` if we were fetching users)
+ *  - `Result`: the type of the data we retrieve (a `User` if we were fetching users)
  *
  * There are two methods: `fetch` and `batch`. `fetch` receives one identity and must return
  * a `Concurrent` containing
@@ -86,7 +92,7 @@ import org.scalatest.matchers.should.Matchers
  *
  * = Writing your first data source =
  *
- * Now that we know about the DataSource` typeclass, let's write our first data source! We'll start by
+ * Now that we know about the `DataSource` typeclass, let's write our first data source! We'll start by
  * implementing a data source for fetching users given their id.
  * The first thing we'll do is define the types for user ids and users.
  *
