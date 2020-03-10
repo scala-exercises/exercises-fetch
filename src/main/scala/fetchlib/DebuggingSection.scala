@@ -21,7 +21,7 @@ import org.scalatest.matchers.should.Matchers
  *
  * Add the following line to your dependencies for including Fetch’s debugging facilities:
  * {{{
- * "com.47deg" %% "fetch-debug" % "1.2.1"
+ * "com.47deg" %% "fetch-debug" % "1.2.2"
  * }}}
  *
  * @param name Debugging

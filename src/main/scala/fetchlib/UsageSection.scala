@@ -41,13 +41,13 @@ import org.scalatest.matchers.should.Matchers
  * To begin, add the following dependency to your SBT build file:
  *
  * {{{
- * "com.47deg" %% "fetch" % "1.2.1"
+ * "com.47deg" %% "fetch" % "1.2.2"
  * }}}
  *
  * Or, if using Scala.js:
  *
  * {{{
- * "com.47deg" %%% "fetch" % "1.2.1"
+ * "com.47deg" %%% "fetch" % "1.2.2"
  * }}}
  *
  * Now you’ll have Fetch available in both Scala and Scala.js.
