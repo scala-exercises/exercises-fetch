@@ -37,14 +37,18 @@ class UsageSpec extends RefSpec with Checkers {
     check(
       testSuccess(
         UsageSection.sequence _,
-        List(userDatabase(1), userDatabase(2), userDatabase(3)) :: HNil))
+        List(userDatabase(1), userDatabase(2), userDatabase(3)) :: HNil
+      )
+    )
   }
 
   def `Combinators traverse`(): Unit = {
     check(
       testSuccess(
         UsageSection.traverse _,
-        List(userDatabase(1), userDatabase(2), userDatabase(3)) :: HNil))
+        List(userDatabase(1), userDatabase(2), userDatabase(3)) :: HNil
+      )
+    )
   }
 
 }

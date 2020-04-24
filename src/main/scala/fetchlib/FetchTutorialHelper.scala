@@ -58,7 +58,8 @@ object FetchTutorialHelper {
 
       override def batch(ids: NonEmptyList[UserId]): F[Map[UserId, User]] =
         latency[F](s"Batch Users $ids") >> CF.pure(
-          userDatabase.view.filterKeys(ids.toList.toSet).toMap)
+          userDatabase.view.filterKeys(ids.toList.toSet).toMap
+        )
     }
   }
 
@@ -92,7 +93,8 @@ object FetchTutorialHelper {
 
       override def batch(ids: NonEmptyList[PostId]): F[Map[PostId, Post]] =
         latency[F](s"Batch Posts $ids") >> CF.pure(
-          postDatabase.view.filterKeys(ids.toList.toSet).toMap)
+          postDatabase.view.filterKeys(ids.toList.toSet).toMap
+        )
     }
   }
 
@@ -151,7 +153,8 @@ object FetchTutorialHelper {
 
       override def batch(ids: NonEmptyList[UserId]): F[Map[UserId, User]] =
         latency[F](s"Batch Users $ids") >> CF.pure(
-          userDatabase.view.filterKeys(ids.toList.toSet).toMap)
+          userDatabase.view.filterKeys(ids.toList.toSet).toMap
+        )
     }
   }
 
@@ -174,7 +177,8 @@ object FetchTutorialHelper {
 
       override def batch(ids: NonEmptyList[UserId]): F[Map[UserId, User]] =
         latency[F](s"Batch Users $ids") >> CF.pure(
-          userDatabase.view.filterKeys(ids.toList.toSet).toMap)
+          userDatabase.view.filterKeys(ids.toList.toSet).toMap
+        )
     }
   }
 
