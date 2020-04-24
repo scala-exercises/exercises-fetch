@@ -12,7 +12,7 @@ object ProjectPlugin extends AutoPlugin {
 
     lazy val V = new {
       val cats: String                = "2.1.1"
-      val fetch: String               = "1.2.1"
+      val fetch: String               = "1.3.0"
       val shapeless: String           = "2.3.3"
       val scala: String               = "2.13.2"
       val scalaExercises: String      = "0.6.0-SNAPSHOT"
