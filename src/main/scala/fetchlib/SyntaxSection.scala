@@ -87,8 +87,7 @@ object SyntaxSection extends AnyFlatSpec with Matchers with Section {
    */
   def applySyntax(res0: String) = {
     def fetchFriends[F[_]: Concurrent]: Fetch[F, String] = (getUser(1), getUser(2)).mapN {
-      (one, other) =>
-        s"${one.username} is friends with ${other.username}"
+      (one, other) => s"${one.username} is friends with ${other.username}"
     }
 
     Fetch.run[IO](fetchFriends).unsafeRunSync() shouldBe res0
