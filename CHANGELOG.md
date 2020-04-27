@@ -1,5 +1,17 @@
 # Changelog
 
+## [v0.6.1.1](https://github.com/scala-exercises/exercises-fetch/tree/v0.6.1.1) (2020-04-27)
+
+[Full Changelog](https://github.com/scala-exercises/exercises-fetch/compare/v0.6.1...v0.6.1.1)
+
+## [v0.6.1](https://github.com/scala-exercises/exercises-fetch/tree/v0.6.1) (2020-04-27)
+
+[Full Changelog](https://github.com/scala-exercises/exercises-fetch/compare/v0.6.0...v0.6.1)
+
+**Merged pull requests:**
+
+- Compile when Publish [\#39](https://github.com/scala-exercises/exercises-fetch/pull/39) ([juanpedromoreno](https://github.com/juanpedromoreno))
+
 ## [v0.6.0](https://github.com/scala-exercises/exercises-fetch/tree/v0.6.0) (2020-04-24)
 
 [Full Changelog](https://github.com/scala-exercises/exercises-fetch/compare/34fe35f22303148eed59d2a15817405d00032518...v0.6.0)
