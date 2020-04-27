@@ -25,8 +25,8 @@ These are the people that have contributed to the _exercises-fetch_ project:
 
 - [![kiroco12](https://avatars1.githubusercontent.com/u/48894338?v=4&s=20) **kiroco12**](https://github.com/kiroco12)
 - [![47erbot](https://avatars1.githubusercontent.com/u/24799081?v=4&s=20) **47erbot**](https://github.com/47erbot)
-- [![raulraja](https://avatars3.githubusercontent.com/u/456796?v=4&s=20) **raulraja**](https://github.com/raulraja)
 - [![juanpedromoreno](https://avatars2.githubusercontent.com/u/4879373?v=4&s=20) **juanpedromoreno**](https://github.com/juanpedromoreno)
+- [![raulraja](https://avatars3.githubusercontent.com/u/456796?v=4&s=20) **raulraja**](https://github.com/raulraja)
 - [![dominv](https://avatars1.githubusercontent.com/u/3943031?v=4&s=20) **dominv**](https://github.com/dominv)
 - [![AdrianRaFo](https://avatars0.githubusercontent.com/u/15971742?v=4&s=20) **AdrianRaFo**](https://github.com/AdrianRaFo)
 - [![jdesiloniz](https://avatars2.githubusercontent.com/u/2835739?v=4&s=20) **jdesiloniz**](https://github.com/jdesiloniz)
