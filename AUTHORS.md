@@ -12,6 +12,7 @@ The maintainers of the project are:
 - [![AdrianRaFo](https://avatars0.githubusercontent.com/u/15971742?v=4&s=20) **Adrian Ramirez Fornell (AdrianRaFo)**](https://github.com/AdrianRaFo)
 - [![angoglez](https://avatars0.githubusercontent.com/u/10107285?v=4&s=20) **Ana Gómez González (angoglez)**](https://github.com/angoglez)
 - [![anamariamv](https://avatars0.githubusercontent.com/u/2183589?v=4&s=20) **Ana Mª Marquez (anamariamv)**](https://github.com/anamariamv)
+- [![BenFradet](https://avatars2.githubusercontent.com/u/1737211?v=4&s=20) **Ben Fradet (BenFradet)**](https://github.com/BenFradet)
 - [![dominv](https://avatars1.githubusercontent.com/u/3943031?v=4&s=20) **Domingo Valera (dominv)**](https://github.com/dominv)
 - [![kiroco12](https://avatars1.githubusercontent.com/u/48894338?v=4&s=20) **Enrique Nieto (kiroco12)**](https://github.com/kiroco12)
 - [![jdesiloniz](https://avatars2.githubusercontent.com/u/2835739?v=4&s=20) **Javier de Silóniz Sandino (jdesiloniz)**](https://github.com/jdesiloniz)
@@ -33,4 +34,5 @@ These are the people that have contributed to the _exercises-fetch_ project:
 - [![calvellido](https://avatars0.githubusercontent.com/u/7753447?v=4&s=20) **calvellido**](https://github.com/calvellido)
 - [![angoglez](https://avatars0.githubusercontent.com/u/10107285?v=4&s=20) **angoglez**](https://github.com/angoglez)
 - [![anamariamv](https://avatars0.githubusercontent.com/u/2183589?v=4&s=20) **anamariamv**](https://github.com/anamariamv)
+- [![BenFradet](https://avatars2.githubusercontent.com/u/1737211?v=4&s=20) **BenFradet**](https://github.com/BenFradet)
 - [![lloydmeta](https://avatars3.githubusercontent.com/u/914805?v=4&s=20) **lloydmeta**](https://github.com/lloydmeta)
