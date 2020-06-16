@@ -58,27 +58,29 @@ object FetchTutorialHelper {
   object Users extends Data[UserId, User] {
     def name = "Users"
 
-    def source[F[_]: Concurrent]: DataSource[F, UserId, User] = new DataSource[F, UserId, User] {
-      override def data = Users
+    def source[F[_]: Concurrent]: DataSource[F, UserId, User] =
+      new DataSource[F, UserId, User] {
+        override def data = Users
 
-      def CF = Concurrent[F]
+        def CF = Concurrent[F]
 
-      override def fetch(id: UserId): F[Option[User]] =
-        latency[F](s"One User $id") >> CF.pure(userDatabase.get(id))
+        override def fetch(id: UserId): F[Option[User]] =
+          latency[F](s"One User $id") >> CF.pure(userDatabase.get(id))
 
-      override def batch(ids: NonEmptyList[UserId]): F[Map[UserId, User]] =
-        latency[F](s"Batch Users $ids") >> CF.pure(
-          userDatabase.view.filterKeys(ids.toList.toSet).toMap
-        )
-    }
+        override def batch(ids: NonEmptyList[UserId]): F[Map[UserId, User]] =
+          latency[F](s"Batch Users $ids") >> CF.pure(
+            userDatabase.view.filterKeys(ids.toList.toSet).toMap
+          )
+      }
   }
 
   def getUser[F[_]: Concurrent: Monad](id: UserId): Fetch[F, User] =
     Fetch[F, UserId, User](id, Users.source)
 
-  def cache[F[_]: Concurrent] = InMemoryCache.from[F, UserId, User](
-    (Users, 1) -> User(1, "@dialelo")
-  )
+  def cache[F[_]: Concurrent] =
+    InMemoryCache.from[F, UserId, User](
+      (Users, 1) -> User(1, "@dialelo")
+    )
 
   type PostId = Int
 
@@ -93,19 +95,20 @@ object FetchTutorialHelper {
   object Posts extends Data[PostId, Post] {
     def name = "Posts"
 
-    def source[F[_]: Concurrent]: DataSource[F, PostId, Post] = new DataSource[F, PostId, Post] {
-      override def data = Posts
+    def source[F[_]: Concurrent]: DataSource[F, PostId, Post] =
+      new DataSource[F, PostId, Post] {
+        override def data = Posts
 
-      override def CF = Concurrent[F]
+        override def CF = Concurrent[F]
 
-      override def fetch(id: PostId): F[Option[Post]] =
-        latency[F](s"One Post $id") >> CF.pure(postDatabase.get(id))
+        override def fetch(id: PostId): F[Option[Post]] =
+          latency[F](s"One Post $id") >> CF.pure(postDatabase.get(id))
 
-      override def batch(ids: NonEmptyList[PostId]): F[Map[PostId, Post]] =
-        latency[F](s"Batch Posts $ids") >> CF.pure(
-          postDatabase.view.filterKeys(ids.toList.toSet).toMap
-        )
-    }
+        override def batch(ids: NonEmptyList[PostId]): F[Map[PostId, Post]] =
+          latency[F](s"Batch Posts $ids") >> CF.pure(
+            postDatabase.view.filterKeys(ids.toList.toSet).toMap
+          )
+      }
   }
 
   def getPost[F[_]: Concurrent](id: PostId): Fetch[F, Post] =
@@ -151,21 +154,22 @@ object FetchTutorialHelper {
   object BatchedUsers extends Data[UserId, User] {
     def name = "Batched Users"
 
-    def source[F[_]: Concurrent]: DataSource[F, UserId, User] = new DataSource[F, UserId, User] {
-      override def data = BatchedUsers
+    def source[F[_]: Concurrent]: DataSource[F, UserId, User] =
+      new DataSource[F, UserId, User] {
+        override def data = BatchedUsers
 
-      override def CF = Concurrent[F]
+        override def CF = Concurrent[F]
 
-      override def maxBatchSize: Option[Int] = Some(2)
+        override def maxBatchSize: Option[Int] = Some(2)
 
-      override def fetch(id: UserId): F[Option[User]] =
-        latency[F](s"One User $id") >> CF.pure(userDatabase.get(id))
+        override def fetch(id: UserId): F[Option[User]] =
+          latency[F](s"One User $id") >> CF.pure(userDatabase.get(id))
 
-      override def batch(ids: NonEmptyList[UserId]): F[Map[UserId, User]] =
-        latency[F](s"Batch Users $ids") >> CF.pure(
-          userDatabase.view.filterKeys(ids.toList.toSet).toMap
-        )
-    }
+        override def batch(ids: NonEmptyList[UserId]): F[Map[UserId, User]] =
+          latency[F](s"Batch Users $ids") >> CF.pure(
+            userDatabase.view.filterKeys(ids.toList.toSet).toMap
+          )
+      }
   }
 
   def getBatchedUser[F[_]: Concurrent](id: Int): Fetch[F, User] =
@@ -174,22 +178,23 @@ object FetchTutorialHelper {
   object SequentialUsers extends Data[UserId, User] {
     def name = "Sequential Users"
 
-    def source[F[_]: Concurrent]: DataSource[F, UserId, User] = new DataSource[F, UserId, User] {
-      override def data = SequentialUsers
+    def source[F[_]: Concurrent]: DataSource[F, UserId, User] =
+      new DataSource[F, UserId, User] {
+        override def data = SequentialUsers
 
-      override def CF = Concurrent[F]
+        override def CF = Concurrent[F]
 
-      override def maxBatchSize: Option[Int]      = Some(2)
-      override def batchExecution: BatchExecution = Sequentially // defaults to `InParallel`
+        override def maxBatchSize: Option[Int]      = Some(2)
+        override def batchExecution: BatchExecution = Sequentially // defaults to `InParallel`
 
-      override def fetch(id: UserId): F[Option[User]] =
-        latency[F](s"One User $id") >> CF.pure(userDatabase.get(id))
+        override def fetch(id: UserId): F[Option[User]] =
+          latency[F](s"One User $id") >> CF.pure(userDatabase.get(id))
 
-      override def batch(ids: NonEmptyList[UserId]): F[Map[UserId, User]] =
-        latency[F](s"Batch Users $ids") >> CF.pure(
-          userDatabase.view.filterKeys(ids.toList.toSet).toMap
-        )
-    }
+        override def batch(ids: NonEmptyList[UserId]): F[Map[UserId, User]] =
+          latency[F](s"Batch Users $ids") >> CF.pure(
+            userDatabase.view.filterKeys(ids.toList.toSet).toMap
+          )
+      }
   }
 
   def getSequentialUser[F[_]: Concurrent](id: Int): Fetch[F, User] =
