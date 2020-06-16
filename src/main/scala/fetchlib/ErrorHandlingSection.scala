@@ -139,12 +139,11 @@ object ErrorHandlingSection extends AnyFlatSpec with Matchers with Section {
     import fetch.debug.describe
 
     Fetch.runLog[IO](getUser(5)).attempt.unsafeRunSync() match {
-      case Left(mi @ MissingIdentity(id, q, log)) => {
+      case Left(mi @ MissingIdentity(id, q, log)) =>
         q.data.name shouldBe res0
         id shouldBe res1
 
         println(describe(log))
-      }
       case _ =>
     }
     // Data: Users
