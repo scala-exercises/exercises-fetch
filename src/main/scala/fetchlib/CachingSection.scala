@@ -43,7 +43,6 @@ object CachingSection extends AnyFlatSpec with Matchers with Section {
    * is calculated with the `DataSource`'s `identity` method.
    *
    * We can pass a cache as the second argument when running a fetch with `Fetch.run`.
-   *
    */
   def prepopulating(res0: Int, res1: String) = {
     def fetchUser[F[_]: Concurrent]: Fetch[F, User] = getUser(1)
@@ -58,7 +57,6 @@ object CachingSection extends AnyFlatSpec with Matchers with Section {
    * available in the cache.
    *
    * If only part of the data is cached, the cached data won't be asked for:
-   *
    */
   def cachePartialHits(res0: String, res1: String) = {
     def fetchUser[F[_]: Concurrent]: Fetch[F, User] = getUser(1)
@@ -95,7 +93,6 @@ object CachingSection extends AnyFlatSpec with Matchers with Section {
   }
 
   /**
-   *
    * = Implementing a custom cache =
    *
    * The default cache is implemented as an immutable in-memory map, but users are free to use their own caches
