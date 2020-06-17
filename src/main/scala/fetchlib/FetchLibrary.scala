@@ -18,7 +18,8 @@ package fetchlib
 
 import org.scalaexercises.definitions.Library
 
-/** Fetch is a library for making access to data both simple & efficient.
+/**
+ * Fetch is a library for making access to data both simple & efficient.
  *
  * @param name fetch
  */

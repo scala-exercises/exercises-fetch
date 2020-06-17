@@ -23,7 +23,6 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
 /**
- *
  * = Error handling =
  *
  * Fetch is used for reading data from remote sources and the queries we perform can and will fail at some point.

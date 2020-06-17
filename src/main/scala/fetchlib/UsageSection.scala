@@ -240,7 +240,7 @@ import org.scalatest.matchers.should.Matchers
  * }}}
  *
  * @param name usage
- **/
+ */
 object UsageSection extends AnyFlatSpec with Matchers with Section {
 
   import FetchTutorialHelper._
@@ -284,7 +284,7 @@ object UsageSection extends AnyFlatSpec with Matchers with Section {
    * }}}
    *
    * We can now run the IO and see its result:
-   **/
+   */
   def creatingAndRunning(res0: User) = {
     def fetchUser[F[_]: Concurrent]: Fetch[F, User] = getUser(1)
 
@@ -332,7 +332,6 @@ object UsageSection extends AnyFlatSpec with Matchers with Section {
    *
    * If two independent requests ask for the same identity, Fetch will detect it and deduplicate the id.
    * Note that when running the fetch, the identity 1 is only requested once even when it is needed by both fetches.
-   *
    */
   def deduplication(res0: (User, User)) = {
     def fetchDuped[F[_]: Concurrent]: Fetch[F, (User, User)] = (getUser(1), getUser(1)).tupled
@@ -374,7 +373,6 @@ object UsageSection extends AnyFlatSpec with Matchers with Section {
    *
    * Now that we know about some of the optimizations that Fetch can perform to read data efficiently,
    * let's look at how we can combine more than one data source.
-   *
    *
    * Imagine that we are rendering a blog and have the following types for posts:
    *
@@ -450,7 +448,6 @@ object UsageSection extends AnyFlatSpec with Matchers with Section {
    * In the following example, we are fetching a post given its id and then fetching its topic. This
    * data could come from entirely different places, but Fetch makes working with heterogeneous sources
    * of data very easy.
-   *
    */
   def combiningData(res0: (Post, PostTopic)) = {
     def fetchMulti[F[_]: Concurrent]: Fetch[F, (Post, PostTopic)] =

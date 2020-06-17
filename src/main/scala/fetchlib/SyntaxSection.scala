@@ -56,7 +56,6 @@ object SyntaxSection extends AnyFlatSpec with Matchers with Section {
    * = Error =
    *
    * Errors can also be lifted to the Fetch monad via `Fetch#error`.
-   *
    */
   def errorSyntax(res0: Boolean) = {
     def fetchFail[F[_]: Concurrent]: Fetch[F, Int] =

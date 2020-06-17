@@ -37,7 +37,6 @@ object BatchingSection extends AnyFlatSpec with Matchers with Section {
   import FetchTutorialHelper._
 
   /**
-   *
    * = Maximum batch size =
    * When implementing a `DataSource`, there is a method we can override called `maxBatchSize`.
    * When implementing it we can specify the maximum size of the batched requests to this data source,
@@ -109,7 +108,6 @@ object BatchingSection extends AnyFlatSpec with Matchers with Section {
    *
    * We have defined the maximum batch size to be 2 and the batch execution to be sequential,
    * let’s see what happens when running a fetch that needs more than one batch:
-   *
    */
   def executionStrategy(res0: Int) = {
     def fetchManySeqBatchedUsers[F[_]: Concurrent]: Fetch[F, List[User]] =
