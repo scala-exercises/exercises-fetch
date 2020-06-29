@@ -1,5 +1,27 @@
 # Changelog
 
+## [v0.6.3](https://github.com/scala-exercises/exercises-fetch/tree/v0.6.3) (2020-06-29)
+
+[Full Changelog](https://github.com/scala-exercises/exercises-fetch/compare/v0.6.2...v0.6.3)
+
+📈 **Dependency updates**
+
+- Update sbt to 1.3.13 [\#58](https://github.com/scala-exercises/exercises-fetch/pull/58) ([scala-steward](https://github.com/scala-steward))
+- Update sbt-mdoc to 2.2.3 [\#57](https://github.com/scala-exercises/exercises-fetch/pull/57) ([scala-steward](https://github.com/scala-steward))
+- Update scalafmt-core to 2.6.1 [\#56](https://github.com/scala-exercises/exercises-fetch/pull/56) ([scala-steward](https://github.com/scala-steward))
+- Update scalacheck-1-14 to 3.2.0.0 [\#55](https://github.com/scala-exercises/exercises-fetch/pull/55) ([scala-steward](https://github.com/scala-steward))
+- Update scalatest to 3.2.0 [\#54](https://github.com/scala-exercises/exercises-fetch/pull/54) ([scala-steward](https://github.com/scala-steward))
+- Update sbt-mdoc to 2.2.2 [\#47](https://github.com/scala-exercises/exercises-fetch/pull/47) ([scala-steward](https://github.com/scala-steward))
+- Update sbt to 1.3.11 [\#45](https://github.com/scala-exercises/exercises-fetch/pull/45) ([scala-steward](https://github.com/scala-steward))
+- Update scalatest to 3.1.2 [\#44](https://github.com/scala-exercises/exercises-fetch/pull/44) ([scala-steward](https://github.com/scala-steward))
+
+**Merged pull requests:**
+
+- Updates build [\#60](https://github.com/scala-exercises/exercises-fetch/pull/60) ([juanpedromoreno](https://github.com/juanpedromoreno))
+- Update scalafmt-core to 2.6.0 [\#52](https://github.com/scala-exercises/exercises-fetch/pull/52) ([BenFradet](https://github.com/BenFradet))
+- Update scalafmt-core to 2.5.3 [\#49](https://github.com/scala-exercises/exercises-fetch/pull/49) ([BenFradet](https://github.com/BenFradet))
+- Prepare repository for next  release and SBT build improvements [\#46](https://github.com/scala-exercises/exercises-fetch/pull/46) ([juanpedromoreno](https://github.com/juanpedromoreno))
+
 ## [v0.6.2](https://github.com/scala-exercises/exercises-fetch/tree/v0.6.2) (2020-04-27)
 
 [Full Changelog](https://github.com/scala-exercises/exercises-fetch/compare/v0.6.1.1...v0.6.2)
