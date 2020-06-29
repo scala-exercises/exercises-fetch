@@ -2,7 +2,7 @@ import com.jsuereth.sbtpgp.PgpKeys.publishSigned
 
 ThisBuild / organization := "org.scala-exercises"
 ThisBuild / githubOrganization := "47degrees"
-ThisBuild / scalaVersion := "2.13.2"
+ThisBuild / scalaVersion := "2.13.3"
 
 publish / skip := true
 
@@ -18,8 +18,8 @@ lazy val exercises = (project in file("."))
   .settings(name := "exercises-fetch")
   .settings(
     libraryDependencies ++= Seq(
-      "org.scala-exercises"        %% "exercise-compiler"         % "0.6.1",
-      "org.scala-exercises"        %% "definitions"               % "0.6.1",
+      "org.scala-exercises"        %% "exercise-compiler"         % "0.6.3",
+      "org.scala-exercises"        %% "definitions"               % "0.6.3",
       "org.typelevel"              %% "cats-core"                 % "2.1.1",
       "com.47deg"                  %% "fetch"                     % "1.3.0",
       "com.47deg"                  %% "fetch-debug"               % "1.3.0",
