@@ -16,8 +16,8 @@ lazy val exercises = (project in file("."))
   .settings(name := "exercises-fetch")
   .settings(
     libraryDependencies ++= Seq(
-      "org.scala-exercises"        %% "exercise-compiler"         % "0.6.4",
-      "org.scala-exercises"        %% "definitions"               % "0.6.4",
+      "org.scala-exercises"        %% "exercise-compiler"         % "0.6.5",
+      "org.scala-exercises"        %% "definitions"               % "0.6.5",
       "org.typelevel"              %% "cats-core"                 % "2.1.1",
       "com.47deg"                  %% "fetch"                     % "1.3.0",
       "com.47deg"                  %% "fetch-debug"               % "1.3.0",
