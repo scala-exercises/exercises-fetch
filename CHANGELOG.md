@@ -1,5 +1,19 @@
 # Changelog
 
+## [v0.6.5](https://github.com/scala-exercises/exercises-fetch/tree/v0.6.5) (2020-08-10)
+
+[Full Changelog](https://github.com/scala-exercises/exercises-fetch/compare/v0.6.4...v0.6.5)
+
+📈 **Dependency updates**
+
+- Update sbt-mdoc to 2.2.4 [\#70](https://github.com/scala-exercises/exercises-fetch/pull/70) ([47erbot](https://github.com/47erbot))
+- Update scalacheck-1-14 to 3.2.1.0 [\#69](https://github.com/scala-exercises/exercises-fetch/pull/69) ([47erbot](https://github.com/47erbot))
+- Update scalatest to 3.2.1 [\#68](https://github.com/scala-exercises/exercises-fetch/pull/68) ([47erbot](https://github.com/47erbot))
+- Update sbt-scalafmt to 2.4.2 [\#67](https://github.com/scala-exercises/exercises-fetch/pull/67) ([47erbot](https://github.com/47erbot))
+- Update scalafmt-core to 2.6.4 [\#66](https://github.com/scala-exercises/exercises-fetch/pull/66) ([47erbot](https://github.com/47erbot))
+- Update scalafmt-core to 2.6.3 [\#65](https://github.com/scala-exercises/exercises-fetch/pull/65) ([scala-steward](https://github.com/scala-steward))
+- Update scalafmt-core to 2.6.2 [\#64](https://github.com/scala-exercises/exercises-fetch/pull/64) ([scala-steward](https://github.com/scala-steward))
+
 ## [v0.6.4](https://github.com/scala-exercises/exercises-fetch/tree/v0.6.4) (2020-06-30)
 
 [Full Changelog](https://github.com/scala-exercises/exercises-fetch/compare/v0.6.3...v0.6.4)
