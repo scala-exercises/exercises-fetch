@@ -22,7 +22,7 @@ lazy val exercises = (project in file("."))
       "com.47deg"                  %% "fetch"                     % "1.3.0",
       "com.47deg"                  %% "fetch-debug"               % "1.3.0",
       "com.chuusai"                %% "shapeless"                 % "2.3.3",
-      "org.scalatest"              %% "scalatest"                 % "3.2.1",
+      "org.scalatest"              %% "scalatest"                 % "3.2.2",
       "org.scalacheck"             %% "scalacheck"                % "1.14.3",
       "org.scalatestplus"          %% "scalacheck-1-14"           % "3.2.2.0",
       "com.github.alexarchambault" %% "scalacheck-shapeless_1.14" % "1.2.5"
