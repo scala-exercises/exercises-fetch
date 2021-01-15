@@ -80,7 +80,7 @@ object BatchingSection extends AnyFlatSpec with Matchers with Section {
    * In the presence of multiple concurrent batches,
    * we can choose between a sequential or parallel execution strategy.
    * By default they will be run in parallel,
-   * but you can tweak it by overriding `DataSource#batchExection`.
+   * but you can tweak it by overriding `DataSource#batchExecution`.
    *
    * {{{
    * object SequentialUsers extends Data[UserId, User]{
