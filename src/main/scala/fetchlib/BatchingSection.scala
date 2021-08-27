@@ -24,22 +24,23 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
 /**
- * = Batching =
+ * =Batching=
  *
- * As we have learned, Fetch performs batched requests whenever it can.
- * It also exposes a couple knobs for tweaking the maximum batch size
- * and whether multiple batches are run in parallel or sequentially.
+ * As we have learned, Fetch performs batched requests whenever it can. It also exposes a couple
+ * knobs for tweaking the maximum batch size and whether multiple batches are run in parallel or
+ * sequentially.
  *
- * @param name batching
+ * @param name
+ *   batching
  */
 object BatchingSection extends AnyFlatSpec with Matchers with Section {
 
   import FetchTutorialHelper._
 
   /**
-   * = Maximum batch size =
-   * When implementing a `DataSource`, there is a method we can override called `maxBatchSize`.
-   * When implementing it we can specify the maximum size of the batched requests to this data source,
+   * =Maximum batch size=
+   * When implementing a `DataSource`, there is a method we can override called `maxBatchSize`. When
+   * implementing it we can specify the maximum size of the batched requests to this data source,
    * let’s try it out:
    *
    * {{{
@@ -65,8 +66,8 @@ object BatchingSection extends AnyFlatSpec with Matchers with Section {
    *   Fetch(id, BatchedUsers.source)
    * }}}
    *
-   * We have defined the maximum batch size to be 2,
-   * let’s see what happens when running a fetch that needs more than two users:
+   * We have defined the maximum batch size to be 2, let’s see what happens when running a fetch
+   * that needs more than two users:
    */
   def maximumSize(res0: Int) = {
     def fetchManyBatchedUsers[F[_]: Concurrent]: Fetch[F, List[User]] =
@@ -76,11 +77,9 @@ object BatchingSection extends AnyFlatSpec with Matchers with Section {
   }
 
   /**
-   * Batch execution strategy
-   * In the presence of multiple concurrent batches,
-   * we can choose between a sequential or parallel execution strategy.
-   * By default they will be run in parallel,
-   * but you can tweak it by overriding `DataSource#batchExecution`.
+   * Batch execution strategy In the presence of multiple concurrent batches, we can choose between
+   * a sequential or parallel execution strategy. By default they will be run in parallel, but you
+   * can tweak it by overriding `DataSource#batchExecution`.
    *
    * {{{
    * object SequentialUsers extends Data[UserId, User]{
@@ -106,8 +105,8 @@ object BatchingSection extends AnyFlatSpec with Matchers with Section {
    *   Fetch(id, SequentialUsers.source)
    * }}}
    *
-   * We have defined the maximum batch size to be 2 and the batch execution to be sequential,
-   * let’s see what happens when running a fetch that needs more than one batch:
+   * We have defined the maximum batch size to be 2 and the batch execution to be sequential, let’s
+   * see what happens when running a fetch that needs more than one batch:
    */
   def executionStrategy(res0: Int) = {
     def fetchManySeqBatchedUsers[F[_]: Concurrent]: Fetch[F, List[User]] =

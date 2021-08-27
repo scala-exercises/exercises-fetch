@@ -24,29 +24,27 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
 /**
- * = Introduction =
+ * =Introduction=
  *
- * Fetch is a library that allows your data fetches to be written in a concise,
- * composable way while executing efficiently. You don't need to use any explicit
- * concurrency construct but existing idioms: applicative for concurrency and
- * monad for sequencing.
+ * Fetch is a library that allows your data fetches to be written in a concise, composable way while
+ * executing efficiently. You don't need to use any explicit concurrency construct but existing
+ * idioms: applicative for concurrency and monad for sequencing.
  *
- * Oftentimes, our applications read and manipulate data from a variety of
- * different sources such as databases, web services or file systems. These data
- * sources are subject to latency, and we'd prefer to query them efficiently.
+ * Oftentimes, our applications read and manipulate data from a variety of different sources such as
+ * databases, web services or file systems. These data sources are subject to latency, and we'd
+ * prefer to query them efficiently.
  *
  * If we are just reading data, we can make a series of optimizations such as:
  *
- *  - batching requests to the same data source
- *  - requesting independent data from different sources in parallel
- *  - caching previously seen results
+ *   - batching requests to the same data source
+ *   - requesting independent data from different sources in parallel
+ *   - caching previously seen results
  *
- * However, if we mix these optimizations with the code that fetches the data
- * we may end up trading clarity for performance. Furthermore, we are
- * mixing low-level (optimization) and high-level (business logic with the data
- * we read) concerns.
+ * However, if we mix these optimizations with the code that fetches the data we may end up trading
+ * clarity for performance. Furthermore, we are mixing low-level (optimization) and high-level
+ * (business logic with the data we read) concerns.
  *
- * = Installation =
+ * =Installation=
  *
  * To begin, add the following dependency to your SBT build file:
  *
@@ -62,7 +60,7 @@ import org.scalatest.matchers.should.Matchers
  *
  * Now you’ll have Fetch available in both Scala and Scala.js.
  *
- * = Usage =
+ * =Usage=
  *
  * In order to tell Fetch how to retrieve data, we must implement the `DataSource` typeclass.
  *
@@ -84,27 +82,27 @@ import org.scalatest.matchers.should.Matchers
  *
  * It takes two type parameters:
  *
- *  - `Identity`: the identity we want to fetch (a `UserId` if we were fetching users)
- *  - `Result`: the type of the data we retrieve (a `User` if we were fetching users)
+ *   - `Identity`: the identity we want to fetch (a `UserId` if we were fetching users)
+ *   - `Result`: the type of the data we retrieve (a `User` if we were fetching users)
  *
- * There are two methods: `fetch` and `batch`. `fetch` receives one identity and must return
- * a `Concurrent` containing
- * an optional result. Returning an `Option` Fetch can detect whether an identity couldn't be
- * fetched or no longer exists.
+ * There are two methods: `fetch` and `batch`. `fetch` receives one identity and must return a
+ * `Concurrent` containing an optional result. Returning an `Option` Fetch can detect whether an
+ * identity couldn't be fetched or no longer exists.
  *
- * `batch` method takes a non-empty list of identities and must return a `Concurrent` containing
- * a map from identities to results. Accepting a list of identities gives Fetch the ability to batch
+ * `batch` method takes a non-empty list of identities and must return a `Concurrent` containing a
+ * map from identities to results. Accepting a list of identities gives Fetch the ability to batch
  * requests to the same data source, and returning a mapping from identities to results, Fetch can
  * detect whenever an identity couldn’t be fetched or no longer exists.
  *
- * The `data` method returns a `Data[Identity, Result]` instance that Fetch uses to optimize requests to the
- * same data source, and is expected to return a singleton `object` that extends `Data[Identity, Result]`.
+ * The `data` method returns a `Data[Identity, Result]` instance that Fetch uses to optimize
+ * requests to the same data source, and is expected to return a singleton `object` that extends
+ * `Data[Identity, Result]`.
  *
- * = Writing your first data source =
+ * =Writing your first data source=
  *
- * Now that we know about the `DataSource` typeclass, let's write our first data source! We'll start by
- * implementing a data source for fetching users given their id.
- * The first thing we'll do is define the types for user ids and users.
+ * Now that we know about the `DataSource` typeclass, let's write our first data source! We'll start
+ * by implementing a data source for fetching users given their id. The first thing we'll do is
+ * define the types for user ids and users.
  *
  * {{{
  * type UserId = Int
@@ -122,8 +120,8 @@ import org.scalatest.matchers.should.Matchers
  *   _ <- Sync[F].delay(println(s"<-- [${Thread.currentThread.getId}] $msg"))
  * } yield ()
  * }}}
- * And now we're ready to write our user data source;
- * we'll emulate a database with an in-memory map.
+ * And now we're ready to write our user data source; we'll emulate a database with an in-memory
+ * map.
  *
  * {{{
  * import cats.data.NonEmptyList
@@ -154,15 +152,15 @@ import org.scalatest.matchers.should.Matchers
  * }
  * }}}
  *
- * Now that we have a data source we can write a function for fetching users
- * given an id, we just have to pass a `UserId` as an argument to `Fetch`.
+ * Now that we have a data source we can write a function for fetching users given an id, we just
+ * have to pass a `UserId` as an argument to `Fetch`.
  *
  * {{{
  * def getUser[F[_] : Concurrent](id: UserId): Fetch[F, User] =
  *   Fetch(id, Users.source)
  * }}}
  *
- * = Optional identities =
+ * =Optional identities=
  *
  * If you want to create a Fetch that doesn’t fail if the identity is not found, you can use
  * `Fetch#optional` instead of `Fetch#apply`. Note that instead of a `Fetch[F, A]` you will get a
@@ -173,10 +171,11 @@ import org.scalatest.matchers.should.Matchers
  *   Fetch.optional(id, Users.source)
  * }}}
  *
- * = Data sources that don’t support batching =
+ * =Data sources that don’t support batching=
  *
- * If your data source doesn’t support batching, you can simply leave the `batch` method unimplemented.
- * Note that it will use the `fetch` implementation for requesting identities in parallel.
+ * If your data source doesn’t support batching, you can simply leave the `batch` method
+ * unimplemented. Note that it will use the `fetch` implementation for requesting identities in
+ * parallel.
  * {{{
  * object Unbatched extends Data[Int, Int]{
  *   def name = "Unbatched"
@@ -192,11 +191,11 @@ import org.scalatest.matchers.should.Matchers
  * }
  * }}}
  *
- * = Batching individuals requests sequentially =
+ * =Batching individuals requests sequentially=
  *
- * The default `batch` implementation run requests to the data source in parallel, but you can easily
- * override it. We can make `batch` sequential using `NonEmptyList.traverse` for fetching individual
- * identities.
+ * The default `batch` implementation run requests to the data source in parallel, but you can
+ * easily override it. We can make `batch` sequential using `NonEmptyList.traverse` for fetching
+ * individual identities.
  *
  * {{{
  * object UnbatchedSeq extends Data[Int, Int]{
@@ -218,9 +217,10 @@ import org.scalatest.matchers.should.Matchers
  * }
  * }}}
  *
- * = Data sources that only support batching =
+ * =Data sources that only support batching=
  *
- * If your data source only supports querying it in batches, you can implement `fetch` in terms of `batch`.
+ * If your data source only supports querying it in batches, you can implement `fetch` in terms of
+ * `batch`.
  * {{{
  * object OnlyBatched extends Data[Int, Int]{
  *   def name = "OnlyBatched"
@@ -239,19 +239,21 @@ import org.scalatest.matchers.should.Matchers
  * }
  * }}}
  *
- * @param name usage
+ * @param name
+ *   usage
  */
 object UsageSection extends AnyFlatSpec with Matchers with Section {
 
   import FetchTutorialHelper._
 
   /**
-   * = Creating a runtime =
+   * =Creating a runtime=
    *
-   * Since we’lll use `IO` from the `cats-effect` library to execute our fetches, we’ll need a runtime for
-   * executing our `IO` instances. This includes a `ContextShift[IO]` used for running the `IO` instances and
-   * a `Timer[IO]` that is used for scheduling, let’s go ahead and create them, we’ll use a
-   * `java.util.concurrent.ScheduledThreadPoolExecutor` with a few threads to run our fetches.
+   * Since we’lll use `IO` from the `cats-effect` library to execute our fetches, we’ll need a
+   * runtime for executing our `IO` instances. This includes a `ContextShift[IO]` used for running
+   * the `IO` instances and a `Timer[IO]` that is used for scheduling, let’s go ahead and create
+   * them, we’ll use a `java.util.concurrent.ScheduledThreadPoolExecutor` with a few threads to run
+   * our fetches.
    * {{{
    * import cats.effect._
    * import java.util.concurrent._
@@ -265,10 +267,10 @@ object UsageSection extends AnyFlatSpec with Matchers with Section {
    * implicit val cs: ContextShift[IO] = IO.contextShift(executionContext)
    * }}}
    *
-   * = Creating and running a fetch =
+   * =Creating and running a fetch=
    *
-   * We are now ready to create and run fetches. Note the distinction between Fetch creation and execution.
-   * When we are creating `Fetch` values, we are just constructing a recipe of our data
+   * We are now ready to create and run fetches. Note the distinction between Fetch creation and
+   * execution. When we are creating `Fetch` values, we are just constructing a recipe of our data
    * dependencies.
    *
    * {{{
@@ -276,7 +278,8 @@ object UsageSection extends AnyFlatSpec with Matchers with Section {
    *   getUser(1)
    * }}}
    *
-   * A Fetch is just a value, and in order to be able to get its value we need to run it to an IO first.
+   * A Fetch is just a value, and in order to be able to get its value we need to run it to an IO
+   * first.
    * {{{
    * import cats.effect.IO
    *
@@ -292,14 +295,15 @@ object UsageSection extends AnyFlatSpec with Matchers with Section {
   }
 
   /**
-   * = Sequencing =
+   * =Sequencing=
    *
-   * When we have two fetches that depend on each other, we can use `flatMap` to combine them.
-   * The most straightforward way is to use a for comprehension.
+   * When we have two fetches that depend on each other, we can use `flatMap` to combine them. The
+   * most straightforward way is to use a for comprehension.
    *
-   * When composing fetches with `flatMap` we are telling Fetch that the second one depends on the previous one,
-   * so it isn't able to make any optimizations. When running the below fetch, we will query the user data source
-   * in two rounds: one for the user with id 1 and another for the user with id 2.
+   * When composing fetches with `flatMap` we are telling Fetch that the second one depends on the
+   * previous one, so it isn't able to make any optimizations. When running the below fetch, we will
+   * query the user data source in two rounds: one for the user with id 1 and another for the user
+   * with id 2.
    */
   def sequencing(res0: (User, User)) = {
     def fetchTwoUsers[F[_]: Concurrent]: Fetch[F, (User, User)] =
@@ -312,12 +316,12 @@ object UsageSection extends AnyFlatSpec with Matchers with Section {
   }
 
   /**
-   * = Batching =
+   * =Batching=
    *
-   * If we combine two independent requests to the same data source, Fetch will
-   * automatically batch them together into a single request.
-   * Applicative operations like the product of two fetches help us tell
-   * the library that those fetches are independent, and thus can be batched if they use the same data source:
+   * If we combine two independent requests to the same data source, Fetch will automatically batch
+   * them together into a single request. Applicative operations like the product of two fetches
+   * help us tell the library that those fetches are independent, and thus can be batched if they
+   * use the same data source:
    *
    * Both ids (1 and 2) are requested in a single query to the data source when executing the fetch.
    */
@@ -328,10 +332,11 @@ object UsageSection extends AnyFlatSpec with Matchers with Section {
   }
 
   /**
-   * = Deduplication =
+   * =Deduplication=
    *
-   * If two independent requests ask for the same identity, Fetch will detect it and deduplicate the id.
-   * Note that when running the fetch, the identity 1 is only requested once even when it is needed by both fetches.
+   * If two independent requests ask for the same identity, Fetch will detect it and deduplicate the
+   * id. Note that when running the fetch, the identity 1 is only requested once even when it is
+   * needed by both fetches.
    */
   def deduplication(res0: (User, User)) = {
     def fetchDuped[F[_]: Concurrent]: Fetch[F, (User, User)] = (getUser(1), getUser(1)).tupled
@@ -340,12 +345,12 @@ object UsageSection extends AnyFlatSpec with Matchers with Section {
   }
 
   /**
-   * = Caching =
+   * =Caching=
    *
-   * During the execution of a fetch, previously requested results are implicitly cached. This allows us to write
-   * fetches in a very modular way, asking for all the data they need as if it
-   * was in memory; furthermore, it also avoids re-fetching an identity that may have changed
-   * during the course of a fetch execution, which can lead to inconsistencies in the data.
+   * During the execution of a fetch, previously requested results are implicitly cached. This
+   * allows us to write fetches in a very modular way, asking for all the data they need as if it
+   * was in memory; furthermore, it also avoids re-fetching an identity that may have changed during
+   * the course of a fetch execution, which can lead to inconsistencies in the data.
    *
    * {{{
    * val fetchCached: Fetch[(User, User)] = for {
@@ -354,8 +359,8 @@ object UsageSection extends AnyFlatSpec with Matchers with Section {
    * } yield (aUser, anotherUser)
    * }}}
    *
-   * As you can see, the `User` with id 1 is fetched only once in a single round-trip. The next
-   * time it was needed we used the cached versions, thus avoiding another request to the user data
+   * As you can see, the `User` with id 1 is fetched only once in a single round-trip. The next time
+   * it was needed we used the cached versions, thus avoiding another request to the user data
    * source.
    */
   def caching(res0: (User, User)) = {
@@ -369,10 +374,10 @@ object UsageSection extends AnyFlatSpec with Matchers with Section {
   }
 
   /**
-   * = Combining data from multiple sources =
+   * =Combining data from multiple sources=
    *
-   * Now that we know about some of the optimizations that Fetch can perform to read data efficiently,
-   * let's look at how we can combine more than one data source.
+   * Now that we know about some of the optimizations that Fetch can perform to read data
+   * efficiently, let's look at how we can combine more than one data source.
    *
    * Imagine that we are rendering a blog and have the following types for posts:
    *
@@ -381,8 +386,8 @@ object UsageSection extends AnyFlatSpec with Matchers with Section {
    * case class Post(id: PostId, author: UserId, content: String)
    * }}}
    *
-   * As you can see, every `Post` has an author, but it refers to the author by its id.
-   * We'll implement a data source for retrieving a post given a post id.
+   * As you can see, every `Post` has an author, but it refers to the author by its id. We'll
+   * implement a data source for retrieving a post given a post id.
    *
    * {{{
    * val postDatabase: Map[PostId, Post] = Map(
@@ -444,10 +449,10 @@ object UsageSection extends AnyFlatSpec with Matchers with Section {
    *   Fetch(post, PostTopics.source)
    * }}}
    *
-   * Now that we have multiple sources let's mix them in the same fetch.
-   * In the following example, we are fetching a post given its id and then fetching its topic. This
-   * data could come from entirely different places, but Fetch makes working with heterogeneous sources
-   * of data very easy.
+   * Now that we have multiple sources let's mix them in the same fetch. In the following example,
+   * we are fetching a post given its id and then fetching its topic. This data could come from
+   * entirely different places, but Fetch makes working with heterogeneous sources of data very
+   * easy.
    */
   def combiningData(res0: (Post, PostTopic)) = {
     def fetchMulti[F[_]: Concurrent]: Fetch[F, (Post, PostTopic)] =
@@ -460,21 +465,22 @@ object UsageSection extends AnyFlatSpec with Matchers with Section {
   }
 
   /**
-   * = Combinators =
+   * =Combinators=
    *
-   * Besides `flatMap` for sequencing fetches and products for running them concurrently,
-   * Fetch provides a number of other combinators.
+   * Besides `flatMap` for sequencing fetches and products for running them concurrently, Fetch
+   * provides a number of other combinators.
    *
-   * = Sequence =
+   * =Sequence=
    *
-   * Whenever we have a list of fetches of the same type and want to run them concurrently, we can use the `sequence`
-   * combinator. It takes a `List[Fetch[A]]` and gives you back a `Fetch[List[A]]`, batching the fetches to the same
-   * data source and running fetches to different sources in parallel.
-   * Note that the `sequence` combinator is more general and works not only on lists but on any type that
-   * has a [[http://typelevel.org/cats/tut/traverse.html Traverse]] instance.
+   * Whenever we have a list of fetches of the same type and want to run them concurrently, we can
+   * use the `sequence` combinator. It takes a `List[Fetch[A]]` and gives you back a
+   * `Fetch[List[A]]`, batching the fetches to the same data source and running fetches to different
+   * sources in parallel. Note that the `sequence` combinator is more general and works not only on
+   * lists but on any type that has a [[http://typelevel.org/cats/tut/traverse.html Traverse]]
+   * instance.
    *
-   * Since `sequence` uses applicative operations internally, the library is able to perform optimizations
-   * across all the sequenced fetches.
+   * Since `sequence` uses applicative operations internally, the library is able to perform
+   * optimizations across all the sequenced fetches.
    * {{{
    * import cats.instances.list._
    * import cats.syntax.traverse._
@@ -488,7 +494,7 @@ object UsageSection extends AnyFlatSpec with Matchers with Section {
   }
 
   /**
-   * = Traverse =
+   * =Traverse=
    *
    * Another interesting combinator is `traverse`, which is the composition of `map` and `sequence`.
    *
