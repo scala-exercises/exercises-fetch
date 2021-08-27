@@ -23,36 +23,38 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
 /**
- * = Error handling =
+ * =Error handling=
  *
- * Fetch is used for reading data from remote sources and the queries we perform can and will fail at some point.
- * There are many things that can go wrong:
+ * Fetch is used for reading data from remote sources and the queries we perform can and will fail
+ * at some point. There are many things that can go wrong:
  *
- *  - an exception can be thrown by client code of certain data sources
- *  - an identity may be missing
- *  - the data source may be temporarily available
+ *   - an exception can be thrown by client code of certain data sources
+ *   - an identity may be missing
+ *   - the data source may be temporarily available
  *
- * Since the error cases are plenty and can’t be anticipated Fetch errors are represented by the 'FetchException'
- * trait, which extends `Throwable`.
- * Currently fetch defines `FetchException` cases for missing identities and arbitrary exceptions but you can extend
- * `FetchException` with any error you want.
+ * Since the error cases are plenty and can’t be anticipated Fetch errors are represented by the
+ * 'FetchException' trait, which extends `Throwable`. Currently fetch defines `FetchException` cases
+ * for missing identities and arbitrary exceptions but you can extend `FetchException` with any
+ * error you want.
  *
- * @param name error_handling
+ * @param name
+ *   error_handling
  */
 object ErrorHandlingSection extends AnyFlatSpec with Matchers with Section {
 
   import FetchTutorialHelper._
 
   /**
-   * = Exceptions =
+   * =Exceptions=
    *
-   * What happens if we run a fetch and fails with an exception? We’ll create a fetch that always fails to
-   * learn about it.
+   * What happens if we run a fetch and fails with an exception? We’ll create a fetch that always
+   * fails to learn about it.
    * {{{
    * def fetchException[F[_] : Concurrent]: Fetch[F, User] =
    *   Fetch.error(new Exception("Oh noes"))
    * }}}
-   * If we try to execute to `IO` the exception will be thrown wrapped in a `fetch.UnhandledException`.
+   * If we try to execute to `IO` the exception will be thrown wrapped in a
+   * `fetch.UnhandledException`.
    * {{{
    * Fetch.run[IO](fetchException).unsafeRunTimed(5.seconds)
    * //fetch.package$UnhandledException
@@ -66,10 +68,11 @@ object ErrorHandlingSection extends AnyFlatSpec with Matchers with Section {
   }
 
   /**
-   * = Debugging exceptions =
+   * =Debugging exceptions=
    *
-   * Using fetch’s debugging facilities, we can visualize a failed fetch’s execution up until the point where it failed.
-   * Let’s create a fetch that fails after a couple rounds to see it in action:
+   * Using fetch’s debugging facilities, we can visualize a failed fetch’s execution up until the
+   * point where it failed. Let’s create a fetch that fails after a couple rounds to see it in
+   * action:
    * {{{
    * def failingFetch[F[_] : Concurrent]: Fetch[F, String] = for {
    *   a <- getUser(1)
@@ -100,14 +103,14 @@ object ErrorHandlingSection extends AnyFlatSpec with Matchers with Section {
    * //     [Round 2] 🕛 0.11 seconds
    * //       [Fetch one] From `Users` with id 2 🕛 0.11 seconds
    * }}}
-   * As you can see in the output from `describe`, the fetch stopped due to a `java.lang.Exception` after
-   * successfully executing two rounds for getting users 1 and 2.
+   * As you can see in the output from `describe`, the fetch stopped due to a `java.lang.Exception`
+   * after successfully executing two rounds for getting users 1 and 2.
    *
-   * = Missing identities =
+   * =Missing identities=
    *
-   * You’ve probably noticed that `DataSource.fetch` and `DataSource.batch` return types help Fetch know if any
-   * requested identity was not found. Whenever an identity cannot be found, the fetch execution will fail with
-   * an instance of `MissingIdentity`.
+   * You’ve probably noticed that `DataSource.fetch` and `DataSource.batch` return types help Fetch
+   * know if any requested identity was not found. Whenever an identity cannot be found, the fetch
+   * execution will fail with an instance of `MissingIdentity`.
    */
   def missing(res0: Boolean) = {
     import fetch.debug.describe
@@ -130,9 +133,9 @@ object ErrorHandlingSection extends AnyFlatSpec with Matchers with Section {
   }
 
   /**
-   * As you can see in the output, the identity `5` for the user source was not found, thus the fetch failed without
-   * executing any rounds. `MissingIdentity` also allows you to access the fetch request that was in progress when
-   * the error happened.
+   * As you can see in the output, the identity `5` for the user source was not found, thus the
+   * fetch failed without executing any rounds. `MissingIdentity` also allows you to access the
+   * fetch request that was in progress when the error happened.
    */
   def missingIdentity(res0: String, res1: Int) = {
     import fetch.debug.describe

@@ -24,23 +24,24 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
 /**
- * = Caching =
+ * =Caching=
  *
- * As we have learned, Fetch caches intermediate results implicitly. You can
- * provide a prepopulated cache for running a fetch, replay a fetch with the cache of a previous
- * one, and even implement a custom cache.
+ * As we have learned, Fetch caches intermediate results implicitly. You can provide a prepopulated
+ * cache for running a fetch, replay a fetch with the cache of a previous one, and even implement a
+ * custom cache.
  *
- * @param name caching
+ * @param name
+ *   caching
  */
 object CachingSection extends AnyFlatSpec with Matchers with Section {
 
   import FetchTutorialHelper._
 
   /**
-   * = Prepopulating a cache =
+   * =Prepopulating a cache=
    *
-   * We'll be using the default in-memory cache, prepopulated with some data. The cache key of an identity
-   * is calculated with the `DataSource`'s `identity` method.
+   * We'll be using the default in-memory cache, prepopulated with some data. The cache key of an
+   * identity is calculated with the `DataSource`'s `identity` method.
    *
    * We can pass a cache as the second argument when running a fetch with `Fetch.run`.
    */
@@ -53,8 +54,8 @@ object CachingSection extends AnyFlatSpec with Matchers with Section {
   }
 
   /**
-   * As you can see, when all the data is cached, no query to the data sources is executed since the results are
-   * available in the cache.
+   * As you can see, when all the data is cached, no query to the data sources is executed since the
+   * results are available in the cache.
    *
    * If only part of the data is cached, the cached data won't be asked for:
    */
@@ -72,13 +73,14 @@ object CachingSection extends AnyFlatSpec with Matchers with Section {
   }
 
   /**
-   * = Replaying a fetch without querying any data source =
+   * =Replaying a fetch without querying any data source=
    *
-   * When running a fetch, we are generally interested in its final result. However, we also have access to the
-   * cache once we run a fetch. We can get both the cache and the result using `Fetch.runCache` instead of `Fetch.run`.
+   * When running a fetch, we are generally interested in its final result. However, we also have
+   * access to the cache once we run a fetch. We can get both the cache and the result using
+   * `Fetch.runCache` instead of `Fetch.run`.
    *
-   * Knowing this, we can replay a fetch reusing the cache of a previous one. The replayed fetch won't have to call
-   * any of the data sources.
+   * Knowing this, we can replay a fetch reusing the cache of a previous one. The replayed fetch
+   * won't have to call any of the data sources.
    */
   def replaying(res0: Int, res1: Int) = {
     def fetchUsers[F[_]: Concurrent]: Fetch[F, List[User]] = List(1, 2, 3).traverse(getUser[F])
@@ -93,16 +95,15 @@ object CachingSection extends AnyFlatSpec with Matchers with Section {
   }
 
   /**
-   * = Implementing a custom cache =
+   * =Implementing a custom cache=
    *
-   * The default cache is implemented as an immutable in-memory map, but users are free to use their own caches
-   * when running a fetch. Your cache should implement the `DataCache` trait, and after that you can pass it to
-   * Fetch’s `run` methods.
+   * The default cache is implemented as an immutable in-memory map, but users are free to use their
+   * own caches when running a fetch. Your cache should implement the `DataCache` trait, and after
+   * that you can pass it to Fetch’s `run` methods.
    *
-   * There is no need for the cache to be mutable since fetch
-   * executions run in an interpreter that uses the state monad.
-   * Note that the `update` method in the `DataCache` trait
-   * yields a new, updated cache.
+   * There is no need for the cache to be mutable since fetch executions run in an interpreter that
+   * uses the state monad. Note that the `update` method in the `DataCache` trait yields a new,
+   * updated cache.
    *
    * {{{
    * trait DataCache[F[_]] {

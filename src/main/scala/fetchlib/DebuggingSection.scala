@@ -24,27 +24,30 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
 /**
- * = Debugging =
+ * =Debugging=
  *
- * We have introduced the handy `fetch.debug.describe` function for debugging errors, but it can do more than that.
- * It can also give you a detailed description of a fetch execution given an execution log.
+ * We have introduced the handy `fetch.debug.describe` function for debugging errors, but it can do
+ * more than that. It can also give you a detailed description of a fetch execution given an
+ * execution log.
  *
  * Add the following line to your dependencies for including Fetch’s debugging facilities:
  * {{{
  * "com.47deg" %% "fetch-debug" % "1.2.2"
  * }}}
  *
- * @param name Debugging
+ * @param name
+ *   Debugging
  */
 object DebuggingSection extends AnyFlatSpec with Matchers with Section {
 
   import FetchTutorialHelper._
 
   /**
-   * = Fetch execution =
+   * =Fetch execution=
    *
-   * We are going to create an interesting fetch that applies all the optimizations available (caching, batching
-   * and concurrent request) for ilustrating how we can visualize fetch executions using the execution log.
+   * We are going to create an interesting fetch that applies all the optimizations available
+   * (caching, batching and concurrent request) for ilustrating how we can visualize fetch
+   * executions using the execution log.
    */
   def fetchExecution(res0: String) = {
     def batched[F[_]: Concurrent]: Fetch[F, List[User]] =
