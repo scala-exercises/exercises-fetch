@@ -119,7 +119,7 @@ object ErrorHandlingSection extends AnyFlatSpec with Matchers with Section {
 
     val result: IO[Either[Throwable, (Log, User)]] = Fetch.runLog[IO](missingUser).attempt
 
-    //And now we can execute the fetch and describe its execution:
+    // And now we can execute the fetch and describe its execution:
 
     val value: Either[Throwable, (Log, User)] = result.unsafeRunSync()
     value.isLeft shouldBe res0
