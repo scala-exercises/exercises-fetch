@@ -17,7 +17,8 @@
 package fetchlib
 
 import cats.effect._
-import cats.implicits._
+import cats.effect.unsafe.IORuntime
+import cats.syntax.all._
 import fetch._
 import org.scalaexercises.definitions.Section
 import org.scalatest.flatspec.AnyFlatSpec
@@ -30,6 +31,8 @@ import org.scalatest.matchers.should.Matchers
  *   syntax
  */
 object SyntaxSection extends AnyFlatSpec with Matchers with Section {
+
+  implicit val runtime: IORuntime = IORuntime.global
 
   import FetchTutorialHelper._
 
@@ -48,7 +51,7 @@ object SyntaxSection extends AnyFlatSpec with Matchers with Section {
    * Plain values can be lifted to the Fetch monad with `Fetch#pure`:
    */
   def pureSyntax(res0: Int) = {
-    def fetchPure[F[_]: Concurrent]: Fetch[F, Int] = Fetch.pure(42)
+    def fetchPure[F[_]: Async]: Fetch[F, Int] = Fetch.pure(42)
 
     Fetch.run[IO](fetchPure).unsafeRunSync() shouldBe res0
   }
@@ -59,7 +62,7 @@ object SyntaxSection extends AnyFlatSpec with Matchers with Section {
    * Errors can also be lifted to the Fetch monad via `Fetch#error`.
    */
   def errorSyntax(res0: Boolean) = {
-    def fetchFail[F[_]: Concurrent]: Fetch[F, Int] =
+    def fetchFail[F[_]: Async]: Fetch[F, Int] =
       Fetch.error(new Exception("Something went terribly wrong"))
 
     Fetch.run[IO](fetchFail).attempt.unsafeRunSync().isLeft shouldBe res0
@@ -86,7 +89,7 @@ object SyntaxSection extends AnyFlatSpec with Matchers with Section {
    * powerful alternative to the product method:
    */
   def applicativeSyntax(res0: User) = {
-    def fetchThree[F[_]: Concurrent]: Fetch[F, (Post, User, Post)] =
+    def fetchThree[F[_]: Async]: Fetch[F, (Post, User, Post)] =
       (getPost(1), getUser(2), getPost(2)).tupled
 
     Fetch.run[IO](fetchThree).unsafeRunSync()._2 shouldBe res0
@@ -96,7 +99,7 @@ object SyntaxSection extends AnyFlatSpec with Matchers with Section {
    * More interestingly, we can use it to apply a pure function to the results of various fetches.
    */
   def applySyntax(res0: String) = {
-    def fetchFriends[F[_]: Concurrent]: Fetch[F, String] =
+    def fetchFriends[F[_]: Async]: Fetch[F, String] =
       (getUser(1), getUser(2)).mapN { (one, other) =>
         s"${one.username} is friends with ${other.username}"
       }
