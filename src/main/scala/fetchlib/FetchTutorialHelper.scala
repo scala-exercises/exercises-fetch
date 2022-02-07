@@ -57,9 +57,9 @@ object FetchTutorialHelper {
 
     def source[F[_]: Async]: DataSource[F, UserId, User] =
       new DataSource[F, UserId, User] {
-        implicit def monadForConcurrentSync[F[_]: Sync: Concurrent]: Monad[F] = new Monad[F] {
-          def flatMap[A, B](fa: F[A])(f: A => F[B]): F[B] = Concurrent[F].flatMap(fa)(f)
-        }
+
+        def CF = Concurrent[F]
+
         override def data = Users
 
         override def fetch(id: UserId): F[Option[User]] =
@@ -113,15 +113,8 @@ object FetchTutorialHelper {
       }
   }
 
-  def getPost[F[_]: Async](id: PostId): Fetch[F, Post] = {
-    // implicit definition of Concurrent in datasource causes some implicit conflicts
-    // so we can provide this value explicitly to help the compiler out
-    // (it doesn't know that we're just going to use IO eventually)
-    val monadForF: Monad[F] = new Monad[F] {
-      def flatMap[A, B](fa: F[A])(f: A => F[B]): F[B] = Concurrent[F].flatMap(fa)(f)
-    }
+  def getPost[F[_]: Async](id: PostId): Fetch[F, Post] =
     Fetch(id, Posts.source[F])
-  }
 
   type PostTopic = String
 
@@ -131,6 +124,8 @@ object FetchTutorialHelper {
     def source[F[_]: Async]: DataSource[F, Post, PostTopic] =
       new DataSource[F, Post, PostTopic] {
         override def data = PostTopics
+
+        def CF = Concurrent[F]
 
         override def fetch(id: Post): F[Option[PostTopic]] = {
           val topic = if (id.id % 2 == 0) "monad" else "applicative"
@@ -165,6 +160,9 @@ object FetchTutorialHelper {
 
     def source[F[_]: Async]: DataSource[F, UserId, User] =
       new DataSource[F, UserId, User] {
+
+        def CF = Concurrent[F]
+
         override def data = BatchedUsers
 
         override def maxBatchSize: Option[Int] = Some(2)
@@ -189,6 +187,9 @@ object FetchTutorialHelper {
 
     def source[F[_]: Async]: DataSource[F, UserId, User] =
       new DataSource[F, UserId, User] {
+
+        def CF = Concurrent[F]
+
         override def data = SequentialUsers
 
         override def maxBatchSize: Option[Int]      = Some(2)
