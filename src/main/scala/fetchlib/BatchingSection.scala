@@ -17,7 +17,9 @@
 package fetchlib
 
 import cats.effect._
-import cats.implicits._
+import cats.effect.unsafe.IORuntime
+import cats.Monad
+import cats.syntax.all._
 import fetch._
 import org.scalaexercises.definitions.Section
 import org.scalatest.flatspec.AnyFlatSpec
@@ -34,6 +36,8 @@ import org.scalatest.matchers.should.Matchers
  *   batching
  */
 object BatchingSection extends AnyFlatSpec with Matchers with Section {
+
+  implicit val runtime: IORuntime = IORuntime.global
 
   import FetchTutorialHelper._
 
@@ -70,8 +74,10 @@ object BatchingSection extends AnyFlatSpec with Matchers with Section {
    * that needs more than two users:
    */
   def maximumSize(res0: Int) = {
-    def fetchManyBatchedUsers[F[_]: Concurrent]: Fetch[F, List[User]] =
-      List(1, 2, 3, 4).traverse(getBatchedUser[F])
+    def fetchManyBatchedUsers[F[_]: Concurrent: Monad: Sync]: Fetch[F, List[User]] = {
+      implicit val appFetchF = applicativeForFetchF[F]
+      List(1, 2, 3, 4).traverse(id => getBatchedUser[F](id)(Concurrent[F], monadForF[F], Sync[F]))
+    }
 
     Fetch.run[IO](fetchManyBatchedUsers).unsafeRunSync().size shouldBe res0
   }
@@ -109,8 +115,10 @@ object BatchingSection extends AnyFlatSpec with Matchers with Section {
    * see what happens when running a fetch that needs more than one batch:
    */
   def executionStrategy(res0: Int) = {
-    def fetchManySeqBatchedUsers[F[_]: Concurrent]: Fetch[F, List[User]] =
-      List(1, 2, 3, 4).traverse(getSequentialUser[F])
+    def fetchManySeqBatchedUsers[F[_]: Concurrent: Sync]: Fetch[F, List[User]] = {
+      implicit val appFetchF = applicativeForFetchF[F]
+      List(1, 2, 3, 4).traverse(id => getSequentialUser[F](id)(Concurrent[F], monadForF[F], Sync[F]))
+    }
 
     Fetch.run[IO](fetchManySeqBatchedUsers).unsafeRunSync().size shouldBe res0
   }
