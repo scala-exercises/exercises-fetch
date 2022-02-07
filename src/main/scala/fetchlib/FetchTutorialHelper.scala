@@ -22,24 +22,33 @@ import scala.concurrent.ExecutionContext
 import cats.{Applicative, Monad}
 import cats.data.NonEmptyList
 import cats.effect._
+import cats.syntax.all._
 
 import fetch._
-import cats.implicits._
 
 object FetchTutorialHelper {
+
+  private def monadForF[F[_]: Concurrent: Sync] = new Monad[F] {
+    def flatMap[A, B](fa: F[A])(f: A => F[B]): F[B] = Concurrent[F].flatMap(fa)(f)
+  }
 
   val executor = new ScheduledThreadPoolExecutor(4)
   val executionContext: ExecutionContext =
     ExecutionContext.fromExecutor(new java.util.concurrent.ForkJoinPool(2))
 
-  implicit val timer: Timer[IO]     = IO.timer(executionContext)
-  implicit val cs: ContextShift[IO] = IO.contextShift(executionContext)
-
   type UserId = Int
 
   case class User(id: UserId, username: String)
 
-  def latency[F[_]: Concurrent](msg: String): F[Unit] =
+  // this method + the implicit Concurrent[F] defined in Datasource leads to
+  // _a lot_ of implicit resolution problems. We _must_ have Sync for the delay()
+  // call here, and we _must_ have concurrent because the Concurrent algebra requires
+  // it for its provided implementation of batch()
+  // https://github.com/47degrees/fetch/blob/v3.1.0/fetch/src/main/scala/datasource.scala#L50-L66
+  // the upshot of this is a lot of ambiguous monads, syntax not working without explicit
+  // references to a value that should have the syntax available, and for comprehensions don't work
+  // without a closer implicit definition
+  def latency[F[_]: Monad: Sync](msg: String): F[Unit] =
     for {
       _ <- Sync[F].delay(println(s"--> [${Thread.currentThread.getId}] $msg"))
       _ <- Sync[F].delay(Thread.sleep(100))
@@ -58,24 +67,29 @@ object FetchTutorialHelper {
   object Users extends Data[UserId, User] {
     def name = "Users"
 
-    def source[F[_]: Concurrent]: DataSource[F, UserId, User] =
+    def source[F[_]: Monad: Sync]: DataSource[F, UserId, User] =
       new DataSource[F, UserId, User] {
+        implicit def monadForConcurrentSync[F[_]: Sync: Concurrent]: Monad[F] = new Monad[F] {
+          def flatMap[A, B](fa: F[A])(f: A => F[B]): F[B] = Concurrent[F].flatMap(fa)(f)
+        }
         override def data = Users
 
-        def CF = Concurrent[F]
-
         override def fetch(id: UserId): F[Option[User]] =
-          latency[F](s"One User $id") >> CF.pure(userDatabase.get(id))
+          monadForF.*>(latency[F](s"One User $id")(monadForF[F], Sync[F]))(
+            Concurrent[F].pure(userDatabase.get(id))
+          )
 
         override def batch(ids: NonEmptyList[UserId]): F[Map[UserId, User]] =
-          latency[F](s"Batch Users $ids") >> CF.pure(
-            userDatabase.view.filterKeys(ids.toList.toSet).toMap
+          monadForF.*>(latency[F](s"Batch Users $ids")(monadForF[F], Sync[F]))(
+            CF.pure(
+              userDatabase.view.filterKeys(ids.toList.toSet).toMap
+            )
           )
       }
   }
 
-  def getUser[F[_]: Concurrent: Monad](id: UserId): Fetch[F, User] =
-    Fetch[F, UserId, User](id, Users.source)
+  def getUser[F[_]: Concurrent: Sync](id: UserId): Fetch[F, User] =
+    Fetch[F, UserId, User](id, Users.source(monadForF[F], Sync[F]))
 
   def cache[F[_]: Concurrent] =
     InMemoryCache.from[F, UserId, User](
@@ -95,51 +109,64 @@ object FetchTutorialHelper {
   object Posts extends Data[PostId, Post] {
     def name = "Posts"
 
-    def source[F[_]: Concurrent]: DataSource[F, PostId, Post] =
+    def source[F[_]: Concurrent: Monad: Sync]: DataSource[F, PostId, Post] =
       new DataSource[F, PostId, Post] {
         override def data = Posts
 
         override def CF = Concurrent[F]
 
         override def fetch(id: PostId): F[Option[Post]] =
-          latency[F](s"One Post $id") >> CF.pure(postDatabase.get(id))
+          monadForF.*>(latency[F](s"One Post $id")(monadForF[F], Sync[F]))(
+            CF.pure(postDatabase.get(id))
+          )
 
         override def batch(ids: NonEmptyList[PostId]): F[Map[PostId, Post]] =
-          latency[F](s"Batch Posts $ids") >> CF.pure(
-            postDatabase.view.filterKeys(ids.toList.toSet).toMap
+          monadForF.*>(latency[F](s"Batch Posts $ids")(monadForF[F], Sync[F]))(
+            CF.pure(
+              postDatabase.view.filterKeys(ids.toList.toSet).toMap
+            )
           )
       }
   }
 
-  def getPost[F[_]: Concurrent](id: PostId): Fetch[F, Post] =
-    Fetch(id, Posts.source)
+  def getPost[F[_]: Concurrent: Sync](id: PostId): Fetch[F, Post] = {
+    // implicit definition of Concurrent in datasource causes some implicit conflicts
+    // so we can provide this value explicitly to help the compiler out
+    // (it doesn't know that we're just going to use IO eventually)
+    val monadForF: Monad[F] = new Monad[F] {
+      def flatMap[A, B](fa: F[A])(f: A => F[B]): F[B] = Concurrent[F].flatMap(fa)(f)
+    }
+    Fetch(id, Posts.source[F](Concurrent[F], monadForF, Sync[F]))
+  }
 
   type PostTopic = String
 
   object PostTopics extends Data[Post, PostTopic] {
     def name = "Post Topics"
 
-    def source[F[_]: Concurrent]: DataSource[F, Post, PostTopic] =
+    def source[F[_]: Monad: Sync]: DataSource[F, Post, PostTopic] =
       new DataSource[F, Post, PostTopic] {
         override def data = PostTopics
 
-        override def CF = Concurrent[F]
-
         override def fetch(id: Post): F[Option[PostTopic]] = {
           val topic = if (id.id % 2 == 0) "monad" else "applicative"
-          latency[F](s"One Post Topic $id") >> CF.pure(Option(topic))
+          monadForF.*>(latency[F](s"One Post Topic $id")(monadForF[F], Sync[F]))(
+            CF.pure(Option(topic))
+          )
         }
 
         override def batch(ids: NonEmptyList[Post]): F[Map[Post, PostTopic]] = {
           val result =
             ids.toList.map(id => (id, if (id.id % 2 == 0) "monad" else "applicative")).toMap
-          latency[F](s"Batch Post Topics $ids") >> CF.pure(result)
+          monadForF.*>(latency[F](s"Batch Post Topics $ids")(monadForF[F], Sync[F]))(
+            CF.pure(result)
+          )
         }
       }
   }
 
-  def getPostTopic[F[_]: Concurrent](post: Post): Fetch[F, PostTopic] =
-    Fetch(post, PostTopics.source)
+  def getPostTopic[F[_]: Concurrent: Monad: Sync](post: Post): Fetch[F, PostTopic] =
+    Fetch(post, PostTopics.source(monadForF[F], Sync[F]))
 
   case class ForgetfulCache[F[_]: Monad]() extends DataCache[F] {
     def insert[I, A](i: I, v: A, d: Data[I, A]): F[DataCache[F]] =
@@ -154,53 +181,58 @@ object FetchTutorialHelper {
   object BatchedUsers extends Data[UserId, User] {
     def name = "Batched Users"
 
-    def source[F[_]: Concurrent]: DataSource[F, UserId, User] =
+    def source[F[_]: Monad: Sync]: DataSource[F, UserId, User] =
       new DataSource[F, UserId, User] {
         override def data = BatchedUsers
-
-        override def CF = Concurrent[F]
 
         override def maxBatchSize: Option[Int] = Some(2)
 
         override def fetch(id: UserId): F[Option[User]] =
-          latency[F](s"One User $id") >> CF.pure(userDatabase.get(id))
+          monadForF.*>(latency[F](s"One User $id")(monadForF[F], Sync[F]))(
+            CF.pure(userDatabase.get(id))
+          )
 
         override def batch(ids: NonEmptyList[UserId]): F[Map[UserId, User]] =
-          latency[F](s"Batch Users $ids") >> CF.pure(
-            userDatabase.view.filterKeys(ids.toList.toSet).toMap
+          monadForF.*>(latency[F](s"Batch Users $ids")(monadForF[F], Sync[F]))(
+            CF.pure(
+              userDatabase.view.filterKeys(ids.toList.toSet).toMap
+            )
           )
       }
   }
 
-  def getBatchedUser[F[_]: Concurrent](id: Int): Fetch[F, User] =
-    Fetch(id, BatchedUsers.source)
+  def getBatchedUser[F[_]: Concurrent: Monad: Sync](id: Int): Fetch[F, User] =
+    Fetch(id, BatchedUsers.source(monadForF[F], Sync[F]))
 
   object SequentialUsers extends Data[UserId, User] {
     def name = "Sequential Users"
 
-    def source[F[_]: Concurrent]: DataSource[F, UserId, User] =
+    def source[F[_]: Monad: Sync]: DataSource[F, UserId, User] =
       new DataSource[F, UserId, User] {
         override def data = SequentialUsers
-
-        override def CF = Concurrent[F]
 
         override def maxBatchSize: Option[Int]      = Some(2)
         override def batchExecution: BatchExecution = Sequentially // defaults to `InParallel`
 
         override def fetch(id: UserId): F[Option[User]] =
-          latency[F](s"One User $id") >> CF.pure(userDatabase.get(id))
+          monadForF.*>(latency[F](s"One User $id")(monadForF[F], Sync[F]))(
+            CF.pure(userDatabase.get(id))
+          )
 
         override def batch(ids: NonEmptyList[UserId]): F[Map[UserId, User]] =
-          latency[F](s"Batch Users $ids") >> CF.pure(
-            userDatabase.view.filterKeys(ids.toList.toSet).toMap
+          monadForF.*>(latency[F](s"Batch Users $ids")(monadForF[F], Sync[F]))(
+            CF.pure(
+              userDatabase.view.filterKeys(ids.toList.toSet).toMap
+            )
           )
       }
   }
 
-  def getSequentialUser[F[_]: Concurrent](id: Int): Fetch[F, User] =
-    Fetch(id, SequentialUsers.source)
+  def getSequentialUser[F[_]: Concurrent: Monad: Sync](id: Int): Fetch[F, User] =
+    Fetch(id, SequentialUsers.source(monadForF[F], Sync[F]))
 
-  def failingFetch[F[_]: Concurrent: Monad]: Fetch[F, String] = {
+  def failingFetch[F[_]: Sync: Concurrent]: Fetch[F, String] = {
+    implicit val fetchMonad: Monad[Fetch[F, *]] = fetchM(monadForF[F])
     for {
       a <- getUser(1)
       b <- getUser(2)
