@@ -17,7 +17,8 @@
 package fetchlib
 
 import cats.effect._
-import cats.implicits._
+import cats.effect.unsafe.IORuntime
+import cats.syntax.all._
 import fetch._
 import org.scalaexercises.definitions.Section
 import org.scalatest.flatspec.AnyFlatSpec
@@ -65,13 +66,13 @@ import org.scalatest.matchers.should.Matchers
  * In order to tell Fetch how to retrieve data, we must implement the `DataSource` typeclass.
  *
  * {{{
- * import cats.effect.Concurrent
+ * import cats.effect.Async
  * import cats.data.NonEmptyList
  *
  * trait DataSource[F[_], Identity, Result]{
  *   def data: Data[Identity, Result]
  *
- *   def CF: Concurrent[F]
+ *   def CF: Async[F]
  *
  *   def fetch(id: Identity): F[Option[Result]]
  *
@@ -86,11 +87,11 @@ import org.scalatest.matchers.should.Matchers
  *   - `Result`: the type of the data we retrieve (a `User` if we were fetching users)
  *
  * There are two methods: `fetch` and `batch`. `fetch` receives one identity and must return a
- * `Concurrent` containing an optional result. Returning an `Option` Fetch can detect whether an
- * identity couldn't be fetched or no longer exists.
+ * `Async` containing an optional result. Returning an `Option` Fetch can detect whether an identity
+ * couldn't be fetched or no longer exists.
  *
- * `batch` method takes a non-empty list of identities and must return a `Concurrent` containing a
- * map from identities to results. Accepting a list of identities gives Fetch the ability to batch
+ * `batch` method takes a non-empty list of identities and must return a `Async` containing a map
+ * from identities to results. Accepting a list of identities gives Fetch the ability to batch
  * requests to the same data source, and returning a mapping from identities to results, Fetch can
  * detect whenever an identity couldn’t be fetched or no longer exists.
  *
@@ -114,7 +115,7 @@ import org.scalatest.matchers.should.Matchers
  * import cats.effect._
  * import cats.syntax.all._
  *
- * def latency[F[_] : Concurrent](msg: String): F[Unit] = for {
+ * def latency[F[_] : Async](msg: String): F[Unit] = for {
  *   _ <- Sync[F].delay(println(s"--> [${Thread.currentThread.getId}] $msg"))
  *   _ <- Sync[F].delay(Thread.sleep(100))
  *   _ <- Sync[F].delay(println(s"<-- [${Thread.currentThread.getId}] $msg"))
@@ -138,10 +139,10 @@ import org.scalatest.matchers.should.Matchers
  * object Users extends Data[UserId, User] {
  *   def name = "Users"
  *
- *   def source[F[_] : Concurrent]: DataSource[F, UserId, User] = new DataSource[F, UserId, User] {
+ *   def source[F[_] : Async]: DataSource[F, UserId, User] = new DataSource[F, UserId, User] {
  *     override def data = Users
  *
- *     override def CF = Concurrent[F]
+ *     override def CF = Async[F]
  *
  *     override def fetch(id: UserId): F[Option[User]] =
  *       latency[F](s"One User $id") >> CF.pure(userDatabase.get(id))
@@ -156,7 +157,7 @@ import org.scalatest.matchers.should.Matchers
  * have to pass a `UserId` as an argument to `Fetch`.
  *
  * {{{
- * def getUser[F[_] : Concurrent](id: UserId): Fetch[F, User] =
+ * def getUser[F[_] : Async](id: UserId): Fetch[F, User] =
  *   Fetch(id, Users.source)
  * }}}
  *
@@ -167,7 +168,7 @@ import org.scalatest.matchers.should.Matchers
  * `Fetch[F, Option[A]]`.
  *
  * {{{
- * def maybeGetUser[F[_] : Concurrent](id: UserId): Fetch[F, Option[User]] =
+ * def maybeGetUser[F[_] : Async](id: UserId): Fetch[F, Option[User]] =
  *   Fetch.optional(id, Users.source)
  * }}}
  *
@@ -180,10 +181,10 @@ import org.scalatest.matchers.should.Matchers
  * object Unbatched extends Data[Int, Int]{
  *   def name = "Unbatched"
  *
- *   def source[F[_] : Concurrent]: DataSource[F, Int, Int] = new DataSource[F, Int, Int]{
+ *   def source[F[_] : Async]: DataSource[F, Int, Int] = new DataSource[F, Int, Int]{
  *     override def data = Unbatched
  *
- *     override def CF = Concurrent[F]
+ *     override def CF = Async[F]
  *
  *     override def fetch(id: Int): F[Option[Int]] =
  *       CF.pure(Option(id))
@@ -201,10 +202,10 @@ import org.scalatest.matchers.should.Matchers
  * object UnbatchedSeq extends Data[Int, Int]{
  *   def name = "UnbatchedSeq"
  *
- *   def source[F[_] : Concurrent]: DataSource[F, Int, Int] = new DataSource[F, Int, Int]{
+ *   def source[F[_] : Async]: DataSource[F, Int, Int] = new DataSource[F, Int, Int]{
  *     override def data = UnbatchedSeq
  *
- *     override def CF = Concurrent[F]
+ *     override def CF = Async[F]
  *
  *     override def fetch(id: Int): F[Option[Int]] =
  *       CF.pure(Option(id))
@@ -225,10 +226,10 @@ import org.scalatest.matchers.should.Matchers
  * object OnlyBatched extends Data[Int, Int]{
  *   def name = "OnlyBatched"
  *
- *   def source[F[_] : Concurrent]: DataSource[F, Int, Int] = new DataSource[F, Int, Int]{
+ *   def source[F[_] : Async]: DataSource[F, Int, Int] = new DataSource[F, Int, Int]{
  *     override def data = OnlyBatched
  *
- *     override def CF = Concurrent[F]
+ *     override def CF = Async[F]
  *
  *     override def fetch(id: Int): F[Option[Int]] =
  *       batch(NonEmptyList(id, List())).map(_.get(id))
@@ -243,6 +244,8 @@ import org.scalatest.matchers.should.Matchers
  *   usage
  */
 object UsageSection extends AnyFlatSpec with Matchers with Section {
+
+  implicit val runtime: IORuntime = IORuntime.global
 
   import FetchTutorialHelper._
 
@@ -274,7 +277,7 @@ object UsageSection extends AnyFlatSpec with Matchers with Section {
    * dependencies.
    *
    * {{{
-   * def fetchUser[F[_] : Concurrent]: Fetch[F, User] =
+   * def fetchUser[F[_] : Async]: Fetch[F, User] =
    *   getUser(1)
    * }}}
    *
@@ -289,7 +292,7 @@ object UsageSection extends AnyFlatSpec with Matchers with Section {
    * We can now run the IO and see its result:
    */
   def creatingAndRunning(res0: User) = {
-    def fetchUser[F[_]: Concurrent]: Fetch[F, User] = getUser(1)
+    def fetchUser[F[_]: Async]: Fetch[F, User] = getUser(1)
 
     Fetch.run[IO](fetchUser).unsafeRunSync() shouldBe res0
   }
@@ -306,7 +309,7 @@ object UsageSection extends AnyFlatSpec with Matchers with Section {
    * with id 2.
    */
   def sequencing(res0: (User, User)) = {
-    def fetchTwoUsers[F[_]: Concurrent]: Fetch[F, (User, User)] =
+    def fetchTwoUsers[F[_]: Async]: Fetch[F, (User, User)] =
       for {
         aUser       <- getUser(1)
         anotherUser <- getUser(aUser.id + 1)
@@ -326,7 +329,7 @@ object UsageSection extends AnyFlatSpec with Matchers with Section {
    * Both ids (1 and 2) are requested in a single query to the data source when executing the fetch.
    */
   def batching(res0: (User, User)) = {
-    def fetchProduct[F[_]: Concurrent]: Fetch[F, (User, User)] = (getUser(1), getUser(2)).tupled
+    def fetchProduct[F[_]: Async]: Fetch[F, (User, User)] = (getUser(1), getUser(2)).tupled
 
     Fetch.run[IO](fetchProduct).unsafeRunSync() shouldBe res0
   }
@@ -339,7 +342,7 @@ object UsageSection extends AnyFlatSpec with Matchers with Section {
    * needed by both fetches.
    */
   def deduplication(res0: (User, User)) = {
-    def fetchDuped[F[_]: Concurrent]: Fetch[F, (User, User)] = (getUser(1), getUser(1)).tupled
+    def fetchDuped[F[_]: Async]: Fetch[F, (User, User)] = (getUser(1), getUser(1)).tupled
 
     Fetch.run[IO](fetchDuped).unsafeRunSync() shouldBe res0
   }
@@ -364,7 +367,7 @@ object UsageSection extends AnyFlatSpec with Matchers with Section {
    * source.
    */
   def caching(res0: (User, User)) = {
-    def fetchCached[F[_]: Concurrent]: Fetch[F, (User, User)] =
+    def fetchCached[F[_]: Async]: Fetch[F, (User, User)] =
       for {
         aUser       <- getUser(1)
         anotherUser <- getUser(1)
@@ -399,10 +402,10 @@ object UsageSection extends AnyFlatSpec with Matchers with Section {
    * object Posts extends Data[PostId, Post] {
    *   def name = "Posts"
    *
-   *   def source[F[_] : Concurrent]: DataSource[F, PostId, Post] = new DataSource[F, PostId, Post] {
+   *   def source[F[_] : Async]: DataSource[F, PostId, Post] = new DataSource[F, PostId, Post] {
    *     override def data = Posts
    *
-   *     override def CF = Concurrent[F]
+   *     override def CF = Async[F]
    *
    *     override def fetch(id: PostId): F[Option[Post]] =
    *       latency[F](s"One Post $id") >> CF.pure(postDatabase.get(id))
@@ -412,7 +415,7 @@ object UsageSection extends AnyFlatSpec with Matchers with Section {
    *   }
    * }
    *
-   * def getPost[F[_] : Concurrent](id: PostId): Fetch[F, Post] =
+   * def getPost[F[_] : Async](id: PostId): Fetch[F, Post] =
    *   Fetch(id, Posts.source)
    * }}}
    *
@@ -428,10 +431,10 @@ object UsageSection extends AnyFlatSpec with Matchers with Section {
    * object PostTopics extends Data[Post, PostTopic] {
    *   def name = "Post Topics"
    *
-   *   def source[F[_] : Concurrent]: DataSource[F, Post, PostTopic] = new DataSource[F, Post, PostTopic] {
+   *   def source[F[_] : Async]: DataSource[F, Post, PostTopic] = new DataSource[F, Post, PostTopic] {
    *     override def data = PostTopics
    *
-   *     override def CF = Concurrent[F]
+   *     override def CF = Async[F]
    *
    *     override def fetch(id: Post): F[Option[PostTopic]] = {
    *       val topic = if (id.id % 2 == 0) "monad" else "applicative"
@@ -445,7 +448,7 @@ object UsageSection extends AnyFlatSpec with Matchers with Section {
    *   }
    * }
    *
-   * def getPostTopic[F[_] : Concurrent](post: Post): Fetch[F, PostTopic] =
+   * def getPostTopic[F[_] : Async](post: Post): Fetch[F, PostTopic] =
    *   Fetch(post, PostTopics.source)
    * }}}
    *
@@ -455,7 +458,7 @@ object UsageSection extends AnyFlatSpec with Matchers with Section {
    * easy.
    */
   def combiningData(res0: (Post, PostTopic)) = {
-    def fetchMulti[F[_]: Concurrent]: Fetch[F, (Post, PostTopic)] =
+    def fetchMulti[F[_]: Async]: Fetch[F, (Post, PostTopic)] =
       for {
         post  <- getPost(1)
         topic <- getPostTopic(post)
@@ -487,7 +490,7 @@ object UsageSection extends AnyFlatSpec with Matchers with Section {
    * }}}
    */
   def sequence(res0: List[User]) = {
-    def fetchSequence[F[_]: Concurrent]: Fetch[F, List[User]] =
+    def fetchSequence[F[_]: Async]: Fetch[F, List[User]] =
       List(getUser(1), getUser(2), getUser(3)).sequence
 
     Fetch.run[IO](fetchSequence).unsafeRunSync() shouldBe res0
@@ -501,7 +504,7 @@ object UsageSection extends AnyFlatSpec with Matchers with Section {
    * All the optimizations made by `sequence` still apply when using `traverse`.
    */
   def traverse(res0: List[User]) = {
-    def fetchTraverse[F[_]: Concurrent]: Fetch[F, List[User]] =
+    def fetchTraverse[F[_]: Async]: Fetch[F, List[User]] =
       List(1, 2, 3).traverse(getUser[F])
 
     Fetch.run[IO](fetchTraverse).unsafeRunSync() shouldBe res0
