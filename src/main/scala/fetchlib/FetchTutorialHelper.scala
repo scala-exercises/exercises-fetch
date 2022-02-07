@@ -28,8 +28,17 @@ import fetch._
 
 object FetchTutorialHelper {
 
-  private def monadForF[F[_]: Concurrent: Sync] = new Monad[F] {
+  def monadForF[F[_]: Concurrent: Sync] = new Monad[F] {
     def flatMap[A, B](fa: F[A])(f: A => F[B]): F[B] = Concurrent[F].flatMap(fa)(f)
+  }
+
+  def monadForFetchF[F[_]: Concurrent: Sync]: Monad[Fetch[F, *]] = fetchM(monadForF[F])
+
+  def applicativeForFetchF[F[_]: Concurrent: Sync]: Applicative[Fetch[F, *]] = new Applicative[Fetch[F, *]] {
+    def ap[A, B](ff: Fetch[F,A => B])(fa: Fetch[F,A]): Fetch[F,B] =
+      monadForFetchF[F].ap(ff)(fa)
+    
+    def pure[A](x: A): Fetch[F,A] = Fetch.pure(x)(Concurrent[F])
   }
 
   val executor = new ScheduledThreadPoolExecutor(4)
@@ -232,7 +241,7 @@ object FetchTutorialHelper {
     Fetch(id, SequentialUsers.source(monadForF[F], Sync[F]))
 
   def failingFetch[F[_]: Sync: Concurrent]: Fetch[F, String] = {
-    implicit val fetchMonad: Monad[Fetch[F, *]] = fetchM(monadForF[F])
+    implicit val fetchMonad: Monad[Fetch[F, *]] = monadForFetchF[F]
     for {
       a <- getUser(1)
       b <- getUser(2)
