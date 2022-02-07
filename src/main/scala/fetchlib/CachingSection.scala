@@ -16,7 +16,8 @@
 
 package fetchlib
 
-import cats.effect.{Concurrent, IO}
+import cats.effect.{Async, IO}
+import cats.effect.unsafe.IORuntime
 import cats.implicits._
 import fetch._
 import org.scalaexercises.definitions.Section
@@ -35,6 +36,8 @@ import org.scalatest.matchers.should.Matchers
  */
 object CachingSection extends AnyFlatSpec with Matchers with Section {
 
+  implicit val runtime: IORuntime = IORuntime.global
+
   import FetchTutorialHelper._
 
   /**
@@ -46,9 +49,9 @@ object CachingSection extends AnyFlatSpec with Matchers with Section {
    * We can pass a cache as the second argument when running a fetch with `Fetch.run`.
    */
   def prepopulating(res0: Int, res1: String) = {
-    def fetchUser[F[_]: Concurrent]: Fetch[F, User] = getUser(1)
+    def fetchUser[F[_]: Async]: Fetch[F, User] = getUser(1)
 
-    def cache[F[_]: Concurrent] = InMemoryCache.from[F, UserId, User]((Users, 1) -> User(1, "@one"))
+    def cache[F[_]: Async] = InMemoryCache.from[F, UserId, User]((Users, 1) -> User(1, "@one"))
 
     Fetch.run[IO](fetchUser, cache).unsafeRunSync() shouldBe User(res0, res1)
   }
@@ -60,12 +63,12 @@ object CachingSection extends AnyFlatSpec with Matchers with Section {
    * If only part of the data is cached, the cached data won't be asked for:
    */
   def cachePartialHits(res0: String, res1: String) = {
-    def fetchUser[F[_]: Concurrent]: Fetch[F, User] = getUser(1)
+    def fetchUser[F[_]: Async]: Fetch[F, User] = getUser(1)
 
-    def cache[F[_]: Concurrent] =
+    def cache[F[_]: Async] =
       InMemoryCache.from[F, UserId, User]((Users, 1) -> User(1, "@dialelo"))
 
-    def fetchManyUsers[F[_]: Concurrent]: Fetch[F, List[User]] =
+    def fetchManyUsers[F[_]: Async]: Fetch[F, List[User]] =
       List(1, 2, 3).traverse(getUser[F])
 
     Fetch.run[IO](fetchManyUsers).unsafeRunSync().head.username shouldBe res0
@@ -83,7 +86,7 @@ object CachingSection extends AnyFlatSpec with Matchers with Section {
    * won't have to call any of the data sources.
    */
   def replaying(res0: Int, res1: Int) = {
-    def fetchUsers[F[_]: Concurrent]: Fetch[F, List[User]] = List(1, 2, 3).traverse(getUser[F])
+    def fetchUsers[F[_]: Async]: Fetch[F, List[User]] = List(1, 2, 3).traverse(getUser[F])
 
     val (populatedCache, result1) = Fetch.runCache[IO](fetchUsers).unsafeRunSync()
 
@@ -125,13 +128,13 @@ object CachingSection extends AnyFlatSpec with Matchers with Section {
    *     Applicative[F].pure(None)
    * }
    *
-   * def forgetfulCache[F[_] : Concurrent] = ForgetfulCache[F]()
+   * def forgetfulCache[F[_] : Async] = ForgetfulCache[F]()
    * }}}
    *
    * We can now use our implementation of the cache when running a fetch.
    */
   def customCache(res0: User) = {
-    def fetchSameTwice[F[_]: Concurrent]: Fetch[F, (User, User)] =
+    def fetchSameTwice[F[_]: Async]: Fetch[F, (User, User)] =
       for {
         one     <- getUser(1)
         another <- getUser(1)

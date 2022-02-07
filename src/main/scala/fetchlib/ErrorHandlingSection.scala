@@ -17,6 +17,7 @@
 package fetchlib
 
 import cats.effect._
+import cats.effect.unsafe.IORuntime
 import fetch._
 import org.scalaexercises.definitions.Section
 import org.scalatest.flatspec.AnyFlatSpec
@@ -30,7 +31,7 @@ import org.scalatest.matchers.should.Matchers
  *
  *   - an exception can be thrown by client code of certain data sources
  *   - an identity may be missing
- *   - the data source may be temporarily available
+ *   - the data source may be temporarily unavailable
  *
  * Since the error cases are plenty and can’t be anticipated Fetch errors are represented by the
  * 'FetchException' trait, which extends `Throwable`. Currently fetch defines `FetchException` cases
@@ -42,6 +43,8 @@ import org.scalatest.matchers.should.Matchers
  */
 object ErrorHandlingSection extends AnyFlatSpec with Matchers with Section {
 
+  implicit val runtime: IORuntime = IORuntime.global
+
   import FetchTutorialHelper._
 
   /**
@@ -50,7 +53,7 @@ object ErrorHandlingSection extends AnyFlatSpec with Matchers with Section {
    * What happens if we run a fetch and fails with an exception? We’ll create a fetch that always
    * fails to learn about it.
    * {{{
-   * def fetchException[F[_] : Concurrent]: Fetch[F, User] =
+   * def fetchException[F[_] : Async]: Fetch[F, User] =
    *   Fetch.error(new Exception("Oh noes"))
    * }}}
    * If we try to execute to `IO` the exception will be thrown wrapped in a
@@ -74,7 +77,7 @@ object ErrorHandlingSection extends AnyFlatSpec with Matchers with Section {
    * point where it failed. Let’s create a fetch that fails after a couple rounds to see it in
    * action:
    * {{{
-   * def failingFetch[F[_] : Concurrent]: Fetch[F, String] = for {
+   * def failingFetch[F[_] : Async]: Fetch[F, String] = for {
    *   a <- getUser(1)
    *   b <- getUser(2)
    *   c <- fetchException
@@ -115,7 +118,7 @@ object ErrorHandlingSection extends AnyFlatSpec with Matchers with Section {
   def missing(res0: Boolean) = {
     import fetch.debug.describe
 
-    def missingUser[F[_]: Concurrent] = getUser(5)
+    def missingUser[F[_]: Async] = getUser(5)
 
     val result: IO[Either[Throwable, (Log, User)]] = Fetch.runLog[IO](missingUser).attempt
 
