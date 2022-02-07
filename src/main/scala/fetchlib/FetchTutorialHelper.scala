@@ -36,14 +36,6 @@ object FetchTutorialHelper {
 
   case class User(id: UserId, username: String)
 
-  // this method + the implicit Concurrent[F] defined in Datasource leads to
-  // _a lot_ of implicit resolution problems. We _must_ have Sync for the delay()
-  // call here, and we _must_ have concurrent because the Datasource algebra requires
-  // it for its provided implementation of batch()
-  // https://github.com/47degrees/fetch/blob/v3.1.0/fetch/src/main/scala/datasource.scala#L50-L66
-  // the upshot of this is a lot of ambiguous monads, syntax not working without explicit
-  // references to a value that should have the syntax available, and for comprehensions don't work
-  // without a closer implicit definition
   def latency[F[_]: Async](msg: String): F[Unit] =
     for {
       _ <- Sync[F].delay(println(s"--> [${Thread.currentThread.getId}] $msg"))
