@@ -30,7 +30,7 @@ import org.scalatest.matchers.should.Matchers
  *
  *   - an exception can be thrown by client code of certain data sources
  *   - an identity may be missing
- *   - the data source may be temporarily available
+ *   - the data source may be temporarily unavailable
  *
  * Since the error cases are plenty and can’t be anticipated Fetch errors are represented by the
  * 'FetchException' trait, which extends `Throwable`. Currently fetch defines `FetchException` cases
