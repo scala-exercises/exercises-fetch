@@ -17,7 +17,8 @@
 package fetchlib
 
 import cats.effect._
-import cats.implicits._
+import cats.effect.unsafe.IORuntime
+import cats.syntax.all._
 import fetch._
 import org.scalaexercises.definitions.Section
 import org.scalatest.flatspec.AnyFlatSpec
@@ -40,6 +41,8 @@ import org.scalatest.matchers.should.Matchers
  */
 object DebuggingSection extends AnyFlatSpec with Matchers with Section {
 
+  implicit val runtime: IORuntime = IORuntime.global
+
   import FetchTutorialHelper._
 
   /**
@@ -50,19 +53,19 @@ object DebuggingSection extends AnyFlatSpec with Matchers with Section {
    * executions using the execution log.
    */
   def fetchExecution(res0: String) = {
-    def batched[F[_]: Concurrent]: Fetch[F, List[User]] =
+    def batched[F[_]: Async]: Fetch[F, List[User]] =
       List(1, 2).traverse(getUser[F])
 
-    def cached[F[_]: Concurrent]: Fetch[F, User] =
+    def cached[F[_]: Async]: Fetch[F, User] =
       getUser(2)
 
-    def notCached[F[_]: Concurrent]: Fetch[F, User] =
+    def notCached[F[_]: Async]: Fetch[F, User] =
       getUser(4)
 
-    def concurrent[F[_]: Concurrent]: Fetch[F, (List[User], List[Post])] =
+    def concurrent[F[_]: Async]: Fetch[F, (List[User], List[Post])] =
       (List(1, 2, 3).traverse(getUser[F]), List(1, 2, 3).traverse(getPost[F])).tupled
 
-    def interestingFetch[F[_]: Concurrent]: Fetch[F, String] =
+    def interestingFetch[F[_]: Async]: Fetch[F, String] =
       batched >> cached >> notCached >> concurrent >> Fetch.pure("done")
 
     Fetch.runLog[IO](interestingFetch).unsafeRunSync()._2 shouldBe res0
